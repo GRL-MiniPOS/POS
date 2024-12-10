@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"github/pos/app"
+)
 
 func main() {
-	fmt.Println("Hello, World!")
+	app.New().Run()
 }

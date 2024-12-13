@@ -1,0 +1,3 @@
+# frontend
+pnpm --filter frontend run type-check
+pnpm --filter frontend run lint-staged

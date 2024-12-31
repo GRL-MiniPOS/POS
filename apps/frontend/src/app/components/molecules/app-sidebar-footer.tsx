@@ -5,7 +5,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   useSidebar,
-} from '@/app/components/atoms/sidebar'
+} from '@/app/components/atoms'
 import Link from 'next/link'
 
 // Footer items

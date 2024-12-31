@@ -10,8 +10,6 @@ import {
   Avatar,
   AvatarImage,
   AvatarFallback,
-} from '@/app/components/atoms/avatar'
-import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
@@ -19,7 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '@/app/components/atoms/sidebar'
+} from '@/app/components/atoms'
 import Link from 'next/link'
 
 interface AppSidebarMenuProps {

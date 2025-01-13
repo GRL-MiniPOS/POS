@@ -10,7 +10,13 @@ import { cn } from '@/app/lib/utils'
 import { Button } from '@/app/components/atoms/button'
 import { Input } from '@/app/components/atoms/input'
 import { Separator } from '@/app/components/atoms/separator'
-import { Sheet, SheetContent } from '@/app/components/atoms/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/app/components/atoms/sheet'
 import { Skeleton } from '@/app/components/atoms/skeleton'
 import {
   Tooltip,
@@ -18,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/app/components/atoms/tooltip'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 const SIDEBAR_COOKIE_NAME = 'sidebar:state'
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -25,6 +32,10 @@ const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
+const SIDEBAR = {
+  title: 'Mini Pos',
+  description: 'Mini Pos Sidebar',
+}
 
 type SidebarContext = {
   state: 'expanded' | 'collapsed'
@@ -195,6 +206,12 @@ const Sidebar = React.forwardRef<
     if (isMobile) {
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+          <VisuallyHidden>
+            <SheetHeader>
+              <SheetTitle>{SIDEBAR.title}</SheetTitle>
+              <SheetDescription>{SIDEBAR.description}</SheetDescription>
+            </SheetHeader>
+          </VisuallyHidden>
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"

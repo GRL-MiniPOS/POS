@@ -1,0 +1,14 @@
+FROM golang:1.22-alpine
+
+WORKDIR /app
+
+# install system dependencies
+RUN apk add --no-cache git gcc musl-dev
+
+COPY go.mod go.sum ./
+
+RUN go mod download
+
+COPY . .
+
+CMD ["go", "run", "main.go"]

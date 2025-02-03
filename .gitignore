@@ -2,3 +2,6 @@ node_modules
 
 data/
 data/*
+
+.env*
+!.env.example

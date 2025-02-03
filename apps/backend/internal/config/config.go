@@ -20,8 +20,20 @@ func (c Config) IsDevelopmentMode() bool {
 }
 
 type DatabaseConfig struct {
-	AutoMigrate     bool   `env:"AUTO_MIGRATE"        envDefault:"true"`
+	// database type: sqlite or postgres
+	Driver         string `env:"DRIVER"           envDefault:"sqlite"`
+	AutoMigrate    bool   `env:"AUTO_MIGRATE"     envDefault:"true"`
+	
+	// SQLite configuration
 	StorageFilePath string `env:"STORAGE_FILE_PATH"   envDefault:"./data/pos.db"`
+	
+	// PostgreSQL configuration
+	Host     string `env:"HOST"            envDefault:"localhost"`
+	Port     string `env:"PORT"            envDefault:"5432"`
+	User     string `env:"USER"            envDefault:"postgres"`
+	Password string `env:"PASSWORD"        envDefault:""`
+	DBName   string `env:"NAME"            envDefault:"pos"`
+	SSLMode  string `env:"SSL_MODE"        envDefault:"disable"`
 }
 
 // New returns a new Config struct with values from environment variables.

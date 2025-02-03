@@ -1,11 +1,12 @@
 module github/pos
 
-go 1.23.2
+go 1.22.0
 
 require (
 	github.com/caarlos0/env/v11 v11.2.2
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/jmoiron/sqlx v1.4.0
+	github.com/lib/pq v1.10.9
 	go.uber.org/fx v1.23.0
 	modernc.org/sqlite v1.18.1
 )

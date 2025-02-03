@@ -7,11 +7,24 @@ import (
 	"strings"
 
 	"github/pos/internal/config"
+	"github/pos/internal/storage/sql/driver"
+	"github/pos/internal/storage/sql/driver/postgres"
+	"github/pos/internal/storage/sql/driver/sqlite"
 
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/fx"
-	_ "modernc.org/sqlite"
 )
+
+func NewDriver(cfg *config.Config) (driver.Driver, error) {
+	switch cfg.Database.Driver {
+	case "sqlite":
+		return sqlite.New(cfg.Database), nil
+	case "postgres":
+		return postgres.New(cfg.Database), nil
+	default:
+		return nil, fmt.Errorf("unsupported database driver: %s", cfg.Database.Driver)
+	}
+}
 
 type DBParams struct {
 	fx.In

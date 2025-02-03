@@ -1,5 +1,5 @@
 CREATE TABLE product_categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     parent_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -7,7 +7,7 @@ CREATE TABLE product_categories (
 );
 
 CREATE TABLE product (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     price INTEGER NOT NULL,
     stock VARCHAR,
@@ -19,7 +19,7 @@ CREATE TABLE product (
 );
 
 CREATE TABLE customer (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     phone INTEGER,
     address VARCHAR,
@@ -28,7 +28,7 @@ CREATE TABLE customer (
 );
 
 CREATE TABLE discount_rules (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     type VARCHAR NOT NULL,
     condition TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE discount_rules (
 );
 
 CREATE TABLE orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     customer_id INTEGER,
     discount_id INTEGER,
     order_date TIMESTAMP,
@@ -51,7 +51,7 @@ CREATE TABLE orders (
 );
 
 CREATE TABLE order_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     order_id INTEGER,
     product_id INTEGER,
     quantity INTEGER,

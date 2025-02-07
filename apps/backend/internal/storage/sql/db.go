@@ -41,10 +41,10 @@ func NewConnections(params DBParams) (out DBResult, err error) {
 		return out, fmt.Errorf("failed to initialized read-write db connection: %w", err)
 	}
 
-	// PostgreSQL 支援並發，所以可以共用同一個連接
+	// PostgreSQL supports concurrent, so we can share the same connection
 	readDB := readWriteDB
 
-	// PostgreSQL 建議的連接池設定
+	// PostgreSQL recommended connection pool settings
 	readDB.SetMaxOpenConns(25)
 	readDB.SetMaxIdleConns(5)
 

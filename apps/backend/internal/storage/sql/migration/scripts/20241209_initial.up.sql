@@ -1,5 +1,5 @@
 CREATE TABLE product_categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     parent_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -7,11 +7,11 @@ CREATE TABLE product_categories (
 );
 
 CREATE TABLE product (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
-    price INTEGER NOT NULL,
+    price BIGINT NOT NULL,
     stock VARCHAR,
-    picture BLOB,
+    picture BYTEA,
     category_id INTEGER,
     spec TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -19,16 +19,16 @@ CREATE TABLE product (
 );
 
 CREATE TABLE customer (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
-    phone INTEGER,
+    phone BIGINT,
     address VARCHAR,
     info VARCHAR,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE discount_rules (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     type VARCHAR NOT NULL,
     condition TEXT,
@@ -37,26 +37,26 @@ CREATE TABLE discount_rules (
 );
 
 CREATE TABLE orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     customer_id INTEGER,
     discount_id INTEGER,
     order_date TIMESTAMP,
     payment VARCHAR,
     source VARCHAR,
-    total_price INTEGER,
-    original_price INTEGER,
+    total_price BIGINT,
+    original_price BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES customer(id),
     FOREIGN KEY (discount_id) REFERENCES discount_rules(id)
 );
 
 CREATE TABLE order_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     order_id INTEGER,
     product_id INTEGER,
     quantity INTEGER,
-    unit_price INTEGER,
-    subtotal INTEGER,
+    unit_price BIGINT,
+    subtotal BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (product_id) REFERENCES product(id)

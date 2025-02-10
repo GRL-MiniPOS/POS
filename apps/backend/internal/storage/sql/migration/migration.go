@@ -6,7 +6,7 @@ import (
 	"github/pos/internal/storage/sql"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite3"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"go.uber.org/fx"
 )
@@ -23,7 +23,7 @@ type Params struct {
 
 // MigrateSchema migrates the database schema to the latest version.
 func MigrateSchema(p Params) error {
-	driverInstance, err := sqlite3.WithInstance(p.Conns.ReadWriteDB.DB, &sqlite3.Config{})
+	driverInstance, err := postgres.WithInstance(p.Conns.ReadWriteDB.DB, &postgres.Config{})
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func MigrateSchema(p Params) error {
 		return err
 	}
 
-	m, err := migrate.NewWithInstance("iofs", sourceInstance, "sqlite", driverInstance)
+	m, err := migrate.NewWithInstance("iofs", sourceInstance, "postgres", driverInstance)
 	if err != nil {
 		return err
 	}

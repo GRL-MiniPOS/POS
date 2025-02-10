@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github/pos/internal/config"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"go.uber.org/fx"
-	_ "modernc.org/sqlite"
 )
 
 type DBParams struct {
@@ -35,21 +34,19 @@ type DBConnections struct {
 }
 
 func NewConnections(params DBParams) (out DBResult, err error) {
-	readWriteDB, err := sqlx.Connect("sqlite", dsn(params.Cfg.Database.StorageFilePath))
+	connStr := dsn(params.Cfg.Database)
+
+	readWriteDB, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
 		return out, fmt.Errorf("failed to initialized read-write db connection: %w", err)
 	}
 
-	readDSN := dsn(params.Cfg.Database.StorageFilePath) + "&mode=ro"
-	readDB, err := sqlx.Connect("sqlite", readDSN)
-	if err != nil {
-		return out, fmt.Errorf("failed to initialized read db connection: %w", err)
-	}
+	// PostgreSQL supports concurrent, so we can share the same connection
+	readDB := readWriteDB
 
-	readDB.SetMaxOpenConns(10)
+	// PostgreSQL recommended connection pool settings
+	readDB.SetMaxOpenConns(25)
 	readDB.SetMaxIdleConns(5)
-	readWriteDB.SetMaxOpenConns(1)
-	readWriteDB.SetMaxIdleConns(1)
 
 	out.Conns = &DBConnections{
 		ReadDB:       readDB,
@@ -59,35 +56,23 @@ func NewConnections(params DBParams) (out DBResult, err error) {
 	}
 	out.AppHook = fx.Hook{
 		OnStop: func(context.Context) error {
-			return errors.Join(readWriteDB.Close(), readDB.Close())
+			return readWriteDB.Close()
 		},
 	}
 
 	return out, err
 }
 
-func dsn(dbname string) string {
-	return fmt.Sprintf("file:%s?%s", dbname, dsnAttrs())
-}
-
-func dsnAttrs() string {
-	attrs := []string{
-		"_pragma", "foreign_keys(1)",
-		"_pragma", "busy_timeout(5000)",
-		"_pragma", "journal_mode(WAL)",
-		"_pragma", "synchronous(IMMEDIATE)",
-		"_time_format", "sqlite",
-	}
-
-	b := strings.Builder{}
-	for i := 0; i < len(attrs); i += 2 {
-		b.WriteString(attrs[i])
-		b.WriteString("=")
-		b.WriteString(attrs[i+1])
-		b.WriteString("&")
-	}
-
-	return strings.TrimSuffix(b.String(), "&")
+func dsn(dbConfig config.DatabaseConfig) string {
+	return fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		dbConfig.Host,
+		dbConfig.Port,
+		dbConfig.User,
+		dbConfig.Password,
+		dbConfig.Name,
+		dbConfig.SSLMode,
+	)
 }
 
 type TransactionAbility[T any] interface {

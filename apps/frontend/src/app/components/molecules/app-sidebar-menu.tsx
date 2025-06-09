@@ -20,7 +20,7 @@ import {
 } from '@/app/components/atoms'
 import Link from 'next/link'
 
-interface AppSidebarMenuProps {
+interface IAppSidebarMenuProps {
   path: string // 外部傳入的路徑
 }
 
@@ -53,7 +53,7 @@ const menuItems = [
   },
 ]
 
-export function AppSidebarMenu({ path }: AppSidebarMenuProps) {
+export function AppSidebarMenu({ path }: IAppSidebarMenuProps) {
   const { open } = useSidebar()
 
   return (

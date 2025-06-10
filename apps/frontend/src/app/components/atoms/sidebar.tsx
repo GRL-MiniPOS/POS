@@ -7,7 +7,7 @@ import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 
 import { useIsMobile } from '@/app/hooks/use-mobile'
 import { cn } from '@/app/lib/utils'
-import { Button } from '@/app/components/atoms/button'
+import { Button } from '@/app/components/atoms/button/button'
 import { Input } from '@/app/components/atoms/input'
 import { Separator } from '@/app/components/atoms/separator'
 import {

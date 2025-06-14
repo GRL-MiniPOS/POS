@@ -3,15 +3,17 @@ import { cn } from '@/app/lib/utils'
 
 interface IDeleteProps {
   className?: string
+  onClick?: () => void
 }
 
-export function Delete({ className }: IDeleteProps) {
+export function Delete({ className, onClick }: IDeleteProps) {
   return (
     <div
       className={cn(
         'w-8 h-8 flex items-center justify-center cursor-pointer rounded-full bg-[#505050] p-2',
         className
       )}
+      onClick={onClick}
     >
       <Trash2 className="w-4 h-4 text-white" />
     </div>

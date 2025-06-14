@@ -11,8 +11,8 @@ interface IPendingOrderCardProps {
   customer: string
   products: IProduct[]
   total: number
+  className?: string
   onEdit?: () => void
-  className?: string // 添加className属性用于覆写样式
 }
 
 export function PendingOrderCard({
@@ -20,8 +20,8 @@ export function PendingOrderCard({
   customer,
   products,
   total,
+  className,
   onEdit,
-  className = '',
 }: IPendingOrderCardProps) {
   return (
     <div

@@ -1,4 +1,4 @@
-import type { ISortableItemProps } from '@/app/types/dnd'
+import type { ISortableItemProps } from '@/app/types/dragAndDrop'
 import type { MouseEvent } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { DragEndEvent } from '@dnd-kit/core'
-import type { IDndItem } from '@/app/types/dnd'
+import type { IDndItem } from '@/app/types/dragAndDrop'
 import {
   DndContext,
   closestCenter,

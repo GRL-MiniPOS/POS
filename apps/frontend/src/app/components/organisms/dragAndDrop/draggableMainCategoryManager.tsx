@@ -84,7 +84,7 @@ export function DraggableMainCategoryManager() {
                 key={item.id}
                 id={item.id}
                 name={item.name}
-                onDelete={deleteItem}
+                handleDelete={deleteItem}
               />
             ))}
           </SortableContext>

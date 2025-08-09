@@ -13,6 +13,20 @@ export default {
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        brand: {
+          DEFAULT: '#9F896C',
+          50: '#F5F3F0',
+          100: '#EBE7E1',
+          200: '#D7CFC3',
+          300: '#C3B7A5',
+          400: '#AF9F87',
+          500: '#9F896C', // 主色
+          600: '#8A7356',
+          700: '#6B5943',
+          800: '#4C3F30',
+          900: '#2D251D',
+          950: '#1A170F',
+        },
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',

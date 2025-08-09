@@ -31,7 +31,7 @@ export function AddCategoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className="w-full rounded-none bg-[#9F896C] hover:bg-[#9F896C]/80 text-white font-medium py-4">
+      <DialogTrigger className="w-full rounded-none bg-brand hover:bg-brand/80 text-white font-medium py-4">
         新增分類
       </DialogTrigger>
       <DialogContent>
@@ -64,7 +64,7 @@ export function AddCategoryDialog({
           <Button
             type="submit"
             onClick={handleSubmit}
-            className="bg-[#9F896C]"
+            className="bg-brand"
             disabled={!categoryName.trim()}
           >
             確認

@@ -100,7 +100,7 @@ export function AppSidebarMenu({ path }: IAppSidebarMenuProps) {
             {menuItems.map(
               (item: INormalMenuItem | ICollapsibleMenuItem, index: number) => (
                 <MenuItemComponent
-                  key={`${item.title}-${index}`}
+                  key={`${item.title}-${index}-${path}`}
                   item={item}
                   path={path}
                   open={open}

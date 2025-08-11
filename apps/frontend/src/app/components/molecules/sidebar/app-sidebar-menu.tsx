@@ -14,46 +14,68 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   useSidebar,
 } from '@/app/components/atoms'
-import Link from 'next/link'
+import { MenuItemComponent } from '@/app/components/molecules/sidebar/app-sidebar-menuItem'
+import {
+  INormalMenuItem,
+  ICollapsibleMenuItem,
+  IAppSidebarMenuProps,
+} from '@/app/types/sidebar'
 
-interface IAppSidebarMenuProps {
-  path: string // 外部傳入的路徑
-}
-
-// Menu items
-// 商品 - 所有商品 - 分類管理 - 庫存列表
-
-// 訂單管理 - 所有訂單 - 新增訂單
-
-// 報表
-// 顧客
-
-const menuItems = [
+const menuItems: (INormalMenuItem | ICollapsibleMenuItem)[] = [
   {
+    type: 'normal',
     title: '總覽',
     url: '/',
     icon: Home,
   },
   {
+    type: 'collapsible',
     title: '商品',
     url: '/product',
     icon: Package2,
+    defaultOpen: false,
+    subItems: [
+      {
+        title: '所有商品',
+        url: '/product/all-products',
+      },
+      {
+        title: '分類管理',
+        url: '/product/category-management',
+      },
+      {
+        title: '庫存列表',
+        url: '/product/inventory-list',
+      },
+    ],
   },
   {
+    type: 'collapsible',
     title: '訂單管理',
     url: '/order',
     icon: SquareChartGantt,
+    defaultOpen: false,
+    subItems: [
+      {
+        title: '所有訂單',
+        url: '/order/all-orders',
+      },
+      {
+        title: '新增訂單',
+        url: '/order/create-order',
+      },
+    ],
   },
   {
+    type: 'normal',
     title: '報表',
     url: '/report',
     icon: ChartColumnBig,
   },
   {
+    type: 'normal',
     title: '顧客',
     url: '/customer',
     icon: SquareUserRound,
@@ -62,7 +84,6 @@ const menuItems = [
 
 export function AppSidebarMenu({ path }: IAppSidebarMenuProps) {
   const { open } = useSidebar()
-
   return (
     <SidebarContent>
       <div className="flex justify-center pt-8">
@@ -76,16 +97,16 @@ export function AppSidebarMenu({ path }: IAppSidebarMenuProps) {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            {menuItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton isActive={path === item.url} asChild>
-                  <Link href={item.url} className="py-5">
-                    <item.icon className={`${open ? '!size-5' : ''}`} />
-                    <span className="text-base">{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {menuItems.map(
+              (item: INormalMenuItem | ICollapsibleMenuItem, index: number) => (
+                <MenuItemComponent
+                  key={`${item.title}-${index}`}
+                  item={item}
+                  path={path}
+                  open={open}
+                />
+              )
+            )}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>

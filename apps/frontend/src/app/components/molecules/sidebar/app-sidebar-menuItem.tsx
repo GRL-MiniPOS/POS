@@ -9,14 +9,14 @@ import {
 import Link from 'next/link'
 import { cn } from '@/app/lib/utils'
 import { IMenuItemComponentProps, ISubMenuItem } from '@/app/types/sidebar'
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 
 export function MenuItemComponent({
   item,
   path,
   open: sidebarOpen,
 }: IMenuItemComponentProps) {
-  const shouldBeExpanded = (): boolean => {
+  const shouldBeExpanded = useMemo(() => {
     if (item.type === 'collapsible') {
       return (
         path === item.url ||
@@ -24,10 +24,16 @@ export function MenuItemComponent({
       )
     }
     return false
-  }
+  }, [path, item])
+
   const [isExpanded, setIsExpanded] = useState<boolean>(
-    item.type === 'collapsible' ? shouldBeExpanded() || item.defaultOpen : false
+    item.type === 'collapsible' ? shouldBeExpanded || item.defaultOpen : false
   )
+
+  const handleToggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev)
+  }, [])
+
   // 可折疊菜單項目
   if (item.type === 'collapsible') {
     if (!sidebarOpen) {
@@ -81,7 +87,7 @@ export function MenuItemComponent({
       <div>
         <SidebarMenuItem>
           <SidebarMenuButton
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={handleToggleExpanded}
             className="py-5 hover:bg-sidebar-accent cursor-pointer"
           >
             <item.icon />

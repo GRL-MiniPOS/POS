@@ -31,6 +31,17 @@ export interface ICollapsibleMenuItem {
   subItems: ISubMenuItem[]
 }
 
+export interface INormalMenuItemComponentProps {
+  item: INormalMenuItem
+  path: string
+  open: boolean
+}
+
+export interface ICollapsibleMenuItemComponentProps {
+  item: ICollapsibleMenuItem
+  path: string
+}
+
 export interface IMenuItemComponentProps {
   item: INormalMenuItem | ICollapsibleMenuItem // 直接使用聯合類型
   path: string

@@ -74,7 +74,7 @@ export default function CategoryManagement() {
         {subStrategy && <DraggableCategoryManager strategy={subStrategy} />}
       </div>
       <Button className="w-40 py-5 rounded-none bg-brand text-white hover:bg-brand-600">
-        新增分類
+        儲存
       </Button>
     </div>
   )

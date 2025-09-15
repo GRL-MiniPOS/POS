@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { SidebarProvider, SidebarTrigger } from '@/app/components/atoms/sidebar'
 import { AppSidebar } from '@/app/components/organisms/sidebar/app-sidebar'
+import { Toaster } from '@/app/components/atoms'
 import '@/app/globals.css'
 
 const geistSans = localFont({
@@ -32,11 +33,12 @@ export default function RootLayout({
       >
         <SidebarProvider>
           <AppSidebar />
-          <main className="px-2">
+          <main className="px-2 flex-1">
             <SidebarTrigger />
             {children}
           </main>
         </SidebarProvider>
+        <Toaster position="top-center" />
       </body>
     </html>
   )

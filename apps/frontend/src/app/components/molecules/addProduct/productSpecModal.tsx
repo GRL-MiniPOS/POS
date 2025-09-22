@@ -15,14 +15,12 @@ import {
   DialogTitle,
 } from '@/app/components/atoms'
 import { IProductSpec } from '@/app/types/addProduct'
-
 interface ProductSpecModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   productSpecs: IProductSpec[]
   setProductSpec: React.Dispatch<React.SetStateAction<IProductSpec[]>>
 }
-
 export function ProductSpecModal({
   open,
   onOpenChange,
@@ -32,7 +30,6 @@ export function ProductSpecModal({
   const [localSpecs, setSpecs] = useState<IProductSpec[]>([
     { id: Date.now().toString(), name: '', quantity: '' },
   ])
-  // 新增空的規格欄位
   const addNewSpec = () => {
     const newSpec: IProductSpec = {
       id: Date.now().toString(),
@@ -41,13 +38,11 @@ export function ProductSpecModal({
     }
     setSpecs((prev) => [...prev, newSpec])
   }
-  // 移除規格欄位
   const removeSpec = (id: string) => {
     if (localSpecs.length > 1) {
       setSpecs((prev) => prev.filter((localSpec) => localSpec.id !== id))
     }
   }
-  // 更新資料至已建立的規格欄位
   const updateSpec = (
     id: string,
     field: keyof Omit<IProductSpec, 'id'>,
@@ -59,7 +54,10 @@ export function ProductSpecModal({
       )
     )
   }
-  // 儲存時避免資料欄位為空以及避免重複的資料
+  // 關閉dialog(save、cancel、點擊close等等關閉操作)都會重置規格欄位
+  const resetSpecs = () => {
+    setSpecs([{ id: Date.now().toString(), name: '', quantity: '' }])
+  }
   const handleSave = () => {
     const isFieldEmpty = localSpecs.some(
       (localSpec) =>
@@ -80,15 +78,22 @@ export function ProductSpecModal({
     }
 
     setProductSpec((prev) => [...prev, ...localSpecs])
+    resetSpecs()
     onOpenChange(false)
   }
   const handleCancel = () => {
-    setSpecs([{ id: '1', name: '', quantity: '' }])
+    resetSpecs()
     onOpenChange(false)
+  }
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      resetSpecs()
+    }
+    onOpenChange(isOpen)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">

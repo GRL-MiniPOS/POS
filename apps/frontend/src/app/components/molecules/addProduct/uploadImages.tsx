@@ -2,11 +2,7 @@ import dynamic from 'next/dynamic'
 import { Upload } from '@/app/components/atoms'
 import { useRef, useState } from 'react'
 
-/**
- * dynamic為Next.js 的動態 import功能
- * 動態 import ImagePreview 元件
- * 避免在伺服器端渲染時，ImagePreview 元件被渲染
- */
+// 因為URL.createObjectURL 只能在瀏覽器端使用，所以需要動態引入ImagePreview元件避免hydration error
 const ImagePreview = dynamic(
   () =>
     import('@/app/components/molecules/addProduct/imagePreview').then(

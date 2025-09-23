@@ -20,7 +20,8 @@ import { ConfirmDialog } from '@/app/components/molecules/addProduct/confirmDial
 export default function AddProduct() {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const [productName, setProductName] = useState('')
-  const [productCategory, setProductCategory] = useState([
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [categoryOptions] = useState([
     {
       id: 1,
       name: '商品類別1',
@@ -36,10 +37,7 @@ export default function AddProduct() {
   ])
 
   const handleValidateAndOpenDialog = () => {
-    if (
-      productName.trim() === '' ||
-      productCategory.some((item) => item.name.trim() === '')
-    ) {
+    if (productName.trim() === '' || selectedCategory.trim() === '') {
       toast('商品名稱和商品類別不得為空')
       return
     }
@@ -74,20 +72,14 @@ export default function AddProduct() {
               商品類別
             </p>
             <Select
-              value={
-                productCategory.find((item) => item.name.trim() === '')?.name
-              }
-              onValueChange={(value) =>
-                setProductCategory(
-                  productCategory.map((item) => ({ ...item, name: value }))
-                )
-              }
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="請選擇" />
               </SelectTrigger>
               <SelectContent>
-                {productCategory.map((item) => (
+                {categoryOptions.map((item) => (
                   <SelectItem key={item.id} value={item.name}>
                     {item.name}
                   </SelectItem>

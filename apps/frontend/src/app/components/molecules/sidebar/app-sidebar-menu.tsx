@@ -38,16 +38,16 @@ const menuItems: (INormalMenuItem | ICollapsibleMenuItem)[] = [
     defaultOpen: false,
     subItems: [
       {
-        title: '所有商品',
-        url: '/product/all-products',
+        title: '庫存列表',
+        url: '/product/inventory-list',
+      },
+      {
+        title: '新增商品',
+        url: '/product/add-product',
       },
       {
         title: '分類管理',
         url: '/product/category-management',
-      },
-      {
-        title: '庫存列表',
-        url: '/product/inventory-list',
       },
     ],
   },

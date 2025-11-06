@@ -3,3 +3,11 @@ export interface IProductSpec {
   name: string
   quantity: string
 }
+
+export interface IProductFormData {
+  productName: string
+  selectedCategory: string
+  price: string
+  productSpecs: IProductSpec[]
+  uploadFiles: File[]
+}

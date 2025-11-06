@@ -19,7 +19,7 @@ interface ProductSpecModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   productSpecs: IProductSpec[]
-  setProductSpec: React.Dispatch<React.SetStateAction<IProductSpec[]>>
+  setProductSpec: (specs: IProductSpec[]) => void
 }
 export function ProductSpecModal({
   open,
@@ -77,7 +77,7 @@ export function ProductSpecModal({
       return
     }
 
-    setProductSpec((prev) => [...prev, ...localSpecs])
+    setProductSpec([...productSpecs, ...localSpecs])
     resetSpecs()
     onOpenChange(false)
   }

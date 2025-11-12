@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/app/components/atoms'
 import { ChevronsRight } from 'lucide-react'
+import { toast } from 'sonner'
+import { GenericConfirmDialog } from '@/app/components/molecules'
 import {
   DraggableCategoryManager, // 使用通用組件
 } from '@/app/components/organisms'
-import {
-  MainCategoryStrategy,
-  SubCategoryStrategy,
-} from '@/app/lib/strategries'
+import { MainCategoryStrategy, SubCategoryStrategy } from '@/app/lib/strategies'
 import type { IDndItem } from '@/app/types/dragAndDrop'
 
 export default function CategoryManagement() {
@@ -41,6 +40,54 @@ export default function CategoryManagement() {
     '3': [{ id: '3-1', name: '零食' }],
   })
 
+  // 刪除確認對話框狀態
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean
+    categoryId: string | null
+    categoryName: string | null
+    type: 'main' | 'sub' | null
+    resolve?: (value: boolean) => void // 用於保存 Promise 的 resolver 函數
+  }>({
+    open: false,
+    categoryId: null,
+    categoryName: null,
+    type: null,
+    resolve: undefined,
+  })
+
+  const handleDeleteErrorMessage = (message: string) => {
+    toast.error(message)
+  }
+
+  const handleBeforeDelete = (
+    type: 'main' | 'sub',
+    id: string,
+    name: string
+  ): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setDeleteDialog({
+        open: true,
+        categoryId: id,
+        categoryName: name,
+        type,
+        resolve,
+      })
+    })
+  }
+
+  const handleConfirmDelete = (confirmed: boolean) => {
+    if (deleteDialog.resolve) {
+      deleteDialog.resolve(confirmed)
+    }
+    setDeleteDialog({
+      open: false,
+      categoryId: null,
+      categoryName: null,
+      type: null,
+      resolve: undefined,
+    })
+  }
+
   // 創建主分類策略
   const mainStrategy = new MainCategoryStrategy(
     mainCategories,
@@ -50,6 +97,8 @@ export default function CategoryManagement() {
         if (selectedMainCategory === id) return
         setSelectedMainCategory(id)
       },
+      onBeforeDelete: (id, name) => handleBeforeDelete('main', id, name),
+      onError: handleDeleteErrorMessage,
     }
   )
 
@@ -59,7 +108,11 @@ export default function CategoryManagement() {
         selectedMainCategory,
         subCategories[selectedMainCategory] || [],
         setSubCategories,
-        { onClick: (id) => console.log('點擊子分類:', id) }
+        {
+          onClick: (id) => console.log('點擊子分類:', id),
+          onBeforeDelete: (id, name) => handleBeforeDelete('sub', id, name),
+          onError: handleDeleteErrorMessage,
+        }
       )
     : null
 
@@ -76,6 +129,22 @@ export default function CategoryManagement() {
       <Button className="w-40 py-5 rounded-none bg-brand text-white hover:bg-brand-600">
         儲存
       </Button>
+      {/* 刪除確認對話框 */}
+      <GenericConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => {
+          if (!open) handleConfirmDelete(false)
+        }}
+        onConfirm={() => handleConfirmDelete(true)}
+        title="刪除分類"
+        description={
+          deleteDialog.type === 'main'
+            ? `確定要刪除「${deleteDialog.categoryName}」主分類嗎？該分類下的所有子分類也會一併刪除。此操作無法復原。`
+            : `確定要刪除「${deleteDialog.categoryName}」子分類嗎？此操作無法復原。`
+        }
+        variant="destructive"
+        buttonText={{ confirm: '刪除', cancel: '取消' }}
+      />
     </div>
   )
 }

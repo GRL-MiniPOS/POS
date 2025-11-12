@@ -20,7 +20,7 @@ export interface ICategoryStrategy {
   type: 'main' | 'sub'
   handleAdd: (name: string) => void
   handleClick?: (id: string) => void
-  handleDelete?: (id: string) => void
+  handleDelete?: (id: string) => Promise<void> // 支持異步確認
   handleDragEnd: (event: DragEndEvent) => void
   getItems: () => IDndItem[]
 }

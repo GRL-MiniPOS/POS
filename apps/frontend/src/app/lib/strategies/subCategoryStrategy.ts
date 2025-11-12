@@ -14,6 +14,8 @@ export class SubCategoryStrategy implements ICategoryStrategy {
     ) => Record<string, IDndItem[]>
   ) => void
   private onSubCategoryClick: (id: string) => void
+  private onBeforeDelete?: (id: string, name: string) => Promise<boolean>
+  private onError?: (message: string) => void
 
   constructor(
     parentId: string,
@@ -25,12 +27,16 @@ export class SubCategoryStrategy implements ICategoryStrategy {
     ) => void,
     callback: {
       onClick: (id: string) => void
+      onBeforeDelete?: (id: string, name: string) => Promise<boolean>
+      onError?: (message: string) => void
     }
   ) {
     this.parentId = parentId
     this.items = items
     this.setSubCategories = setSubCategories
     this.onSubCategoryClick = callback.onClick
+    this.onBeforeDelete = callback.onBeforeDelete
+    this.onError = callback.onError
   }
 
   private updateItems = (
@@ -62,12 +68,26 @@ export class SubCategoryStrategy implements ICategoryStrategy {
   }
 
   // 刪除子分類
-  handleDelete = (id: string) => {
+  handleDelete = async (id: string) => {
     try {
+      if (this.onBeforeDelete) {
+        const category = this.items.find((item) => item.id === id)
+        if (!category) {
+          console.error('[SubCategoryStrategy] 找不到該分類:', id)
+          this.onError?.('找不到該分類，無法刪除') // 通知 UI 層顯示錯誤
+          return
+        }
+
+        const confirmed = await this.onBeforeDelete(id, category.name)
+        if (!confirmed) {
+          return // 用戶取消刪除
+        }
+      }
       // 調用API刪除子分類
       this.updateItems(this.items.filter((item) => item.id !== id))
     } catch (error) {
       console.error('删除子分類失敗:', error)
+      this.onError?.('刪除子分類失敗，請稍後再試')
     }
   }
 

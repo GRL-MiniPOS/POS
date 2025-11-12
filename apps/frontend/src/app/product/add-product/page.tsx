@@ -17,7 +17,7 @@ import {
 import {
   AddProductSpec,
   UploadImages,
-  ConfirmDialog,
+  GenericConfirmDialog,
 } from '@/app/components/molecules'
 import { IProductFormData } from '@/app/types/addProduct'
 
@@ -169,10 +169,13 @@ export default function AddProduct() {
           </div>
         </CardContent>
       </Card>
-      <ConfirmDialog
+      <GenericConfirmDialog
         open={isConfirmDialogOpen}
         onOpenChange={setIsConfirmDialogOpen}
-        handleAddProduct={handleAddProduct}
+        onConfirm={handleAddProduct}
+        title="確定要新增商品嗎？"
+        description="此操作將創建新的商品資料，請確認所有資訊正確。"
+        variant="default"
       />
     </div>
   )

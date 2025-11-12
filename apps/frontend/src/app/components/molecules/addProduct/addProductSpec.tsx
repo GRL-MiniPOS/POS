@@ -16,7 +16,6 @@ export function AddProductSpec({
   onSpecsChange,
 }: IAddProductSpecProps) {
   const [isProductSpecModalOpen, setIsProductSpecModalOpen] = useState(false)
-  // const [productSpecs, setProductSpec] = useState<IProductSpec[]>([])
   const handleAddSpec = () => {
     setIsProductSpecModalOpen(true)
   }

@@ -25,7 +25,7 @@ import { IProductFormData } from '@/app/types/addProduct'
 const Initial_FORM_STATE: IProductFormData = {
   productName: '',
   selectedCategory: '',
-  price: '0',
+  price: 0,
   productSpecs: [],
   uploadFiles: [],
 }
@@ -76,7 +76,7 @@ export default function AddProduct() {
       return
     }
 
-    if (productFormData.price.trim() === '0') {
+    if (productFormData.price === 0) {
       toast('價格不得設置為0')
       return
     }
@@ -137,9 +137,12 @@ export default function AddProduct() {
             <Input
               type="number"
               placeholder="請輸入價格"
-              value={productFormData.price}
+              value={productFormData.price || ''}
               min={0}
-              onChange={(e) => updateFormData('price', e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value)
+                updateFormData('price', value)
+              }}
             />
           </div>
           <div className="space-y-3">

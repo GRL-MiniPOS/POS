@@ -7,7 +7,7 @@ export interface IProductSpec {
 export interface IProductFormData {
   productName: string
   selectedCategory: string
-  price: string
+  price: number
   productSpecs: IProductSpec[]
   uploadFiles: File[]
 }

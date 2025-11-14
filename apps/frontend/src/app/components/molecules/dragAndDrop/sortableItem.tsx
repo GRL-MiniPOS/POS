@@ -23,9 +23,7 @@ export function SortableItem({
 
   const fnHandleDelete = (e: MouseEvent) => {
     e.stopPropagation()
-    if (confirm('你確定要刪除該分類嗎?')) {
-      handleDelete?.(id)
-    }
+    handleDelete?.(id)
   }
 
   const fnHandleClick = () => {

@@ -14,13 +14,31 @@ import {
   Button,
   toast,
 } from '@/app/components/atoms'
-import { AddProductSpec, UploadImages } from '@/app/components/molecules'
-import { ConfirmDialog } from '@/app/components/molecules/addProduct/confirmDialog'
+import {
+  AddProductSpec,
+  UploadImages,
+  ConfirmDialog,
+} from '@/app/components/molecules'
+import { IProductFormData } from '@/app/types/addProduct'
+
+// 商品表單初始化資料
+const Initial_FORM_STATE: IProductFormData = {
+  productName: '',
+  selectedCategory: '',
+  price: 0,
+  productSpecs: [],
+  uploadFiles: [],
+}
 
 export default function AddProduct() {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
-  const [productName, setProductName] = useState('')
-  const [productCategory, setProductCategory] = useState([
+
+  // 商品表單資料
+  const [productFormData, setProductFormData] =
+    useState<IProductFormData>(Initial_FORM_STATE)
+
+  // 商品類別選項
+  const [categoryOptions] = useState([
     {
       id: 1,
       name: '商品類別1',
@@ -35,19 +53,40 @@ export default function AddProduct() {
     },
   ])
 
+  const updateFormData = <k extends keyof IProductFormData>(
+    key: k,
+    value: IProductFormData[k]
+  ) => {
+    setProductFormData((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  const resetFormData = () => {
+    setProductFormData(Initial_FORM_STATE)
+  }
+
   const handleValidateAndOpenDialog = () => {
     if (
-      productName.trim() === '' ||
-      productCategory.some((item) => item.name.trim() === '')
+      productFormData.productName.trim() === '' ||
+      productFormData.selectedCategory.trim() === ''
     ) {
       toast('商品名稱和商品類別不得為空')
       return
     }
+
+    if (productFormData.price === 0) {
+      toast('價格不得設置為0')
+      return
+    }
+
     setIsConfirmDialogOpen(true)
   }
 
   const handleAddProduct = () => {
     console.log('新增商品')
+    resetFormData()
   }
 
   return (
@@ -65,8 +104,8 @@ export default function AddProduct() {
             <Input
               type="text"
               placeholder="請輸入商品名稱"
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
+              value={productFormData.productName}
+              onChange={(e) => updateFormData('productName', e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -74,20 +113,16 @@ export default function AddProduct() {
               商品類別
             </p>
             <Select
-              value={
-                productCategory.find((item) => item.name.trim() === '')?.name
-              }
+              value={productFormData.selectedCategory}
               onValueChange={(value) =>
-                setProductCategory(
-                  productCategory.map((item) => ({ ...item, name: value }))
-                )
+                updateFormData('selectedCategory', value)
               }
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="請選擇" />
               </SelectTrigger>
               <SelectContent>
-                {productCategory.map((item) => (
+                {categoryOptions.map((item) => (
                   <SelectItem key={item.id} value={item.name}>
                     {item.name}
                   </SelectItem>
@@ -95,17 +130,40 @@ export default function AddProduct() {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              價格
+            </p>
+            <Input
+              type="number"
+              placeholder="請輸入價格"
+              value={productFormData.price || ''}
+              min={0}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : Number(e.target.value)
+                updateFormData('price', value)
+              }}
+            />
+          </div>
           <div className="space-y-3">
             <p className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               規格
             </p>
-            <AddProductSpec className="flex flex-wrap gap-3" />
+            <AddProductSpec
+              className="flex flex-wrap gap-3"
+              specs={productFormData.productSpecs}
+              onSpecsChange={(specs) => updateFormData('productSpecs', specs)}
+            />
           </div>
           <div className="space-y-3">
             <p className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               圖片
             </p>
-            <UploadImages className="flex flex-wrap gap-3" />
+            <UploadImages
+              className="flex flex-wrap gap-3"
+              files={productFormData.uploadFiles}
+              onFilesChange={(files) => updateFormData('uploadFiles', files)}
+            />
           </div>
           <div className="flex justify-end">
             <Button className="px-8 py-5" onClick={handleValidateAndOpenDialog}>
@@ -114,7 +172,6 @@ export default function AddProduct() {
           </div>
         </CardContent>
       </Card>
-
       <ConfirmDialog
         open={isConfirmDialogOpen}
         onOpenChange={setIsConfirmDialogOpen}

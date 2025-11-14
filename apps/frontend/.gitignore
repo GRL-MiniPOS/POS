@@ -17,6 +17,15 @@
 /.next/
 /out/
 
+# docs - 允許 markdown 文件，但禁止 PDF
+/docs/*
+!/docs/*.md
+# 確保 PDF 不被提交
+*.pdf
+
+# claude local config（個人配置）
+CLAUDE.local.md
+
 # production
 /build
 

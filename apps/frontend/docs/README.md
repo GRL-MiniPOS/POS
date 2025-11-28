@@ -10,21 +10,21 @@
 
 ## 📖 必要文件（需額外取得）
 
-### Practical-UI.pdf
+### Practical-UI-2nd-edition.pdf
 
 #### 📋 基本資訊
-- **用途**：詳細的 UI 設計參考書籍
-- **檔案大小**：約 146MB
-- **放置位置**：`apps/frontend/docs/Practical-UI.pdf`
+- **用途**：詳細的 UI 設計參考書籍（第二版）
+- **檔案大小**：約 166MB
+- **放置位置**：`apps/frontend/docs/Practical-UI-2nd-edition.pdf`
 
 #### ⚠️ 為何未包含在版本控制中
-1. **檔案過大**：146MB 會讓 git 倉庫變得肥大
+1. **檔案過大**：166MB 會讓 git 倉庫變得肥大
 2. **版權限制**：此為商業書籍，需向版權人取得授權
 3. **替代方案**：`design-index.md` 已包含主要章節摘要
 
 ---
 
-## 🔐 如何取得 Practical-UI.pdf
+## 🔐 如何取得 Practical-UI-2nd-edition.pdf
 
 ### 方式一：向版權人索取（團隊成員）
 
@@ -35,15 +35,15 @@
 2. **放置步驟**：
    ```bash
    # 將取得的 PDF 放置到 docs 目錄
-   cp ~/Downloads/Practical-UI.pdf apps/frontend/docs/
+   cp ~/Downloads/Practical-UI-2nd-edition.pdf apps/frontend/docs/
 
    # 驗證檔案存在
-   ls -lh apps/frontend/docs/Practical-UI.pdf
+   ls -lh apps/frontend/docs/Practical-UI-2nd-edition.pdf
    ```
 
 3. **驗證結果**：
-   - 檔案大小約 146MB
-   - 確認 Claude 可以讀取：在 CLAUDE.md 中使用 `@docs/Practical-UI.pdf`
+   - 檔案大小約 166MB
+   - 確認 Claude 可以讀取：在 CLAUDE.md 中使用 `@docs/Practical-UI-2nd-edition.pdf`
 
 ### 方式二：購買正版（推薦）
 
@@ -86,13 +86,13 @@
 
 ```bash
 # 檢查 PDF 是否正確放置
-test -f apps/frontend/docs/Practical-UI.pdf && echo "✅ PDF 已就位" || echo "❌ PDF 不存在"
+test -f apps/frontend/docs/Practical-UI-2nd-edition.pdf && echo "✅ PDF 已就位" || echo "❌ PDF 不存在"
 
-# 檢查檔案大小（應該約 146MB）
-du -h apps/frontend/docs/Practical-UI.pdf
+# 檢查檔案大小（應該約 166MB）
+du -h apps/frontend/docs/Practical-UI-2nd-edition.pdf
 
 # 確認不會被 git 追蹤
-git status apps/frontend/docs/Practical-UI.pdf
+git status apps/frontend/docs/Practical-UI-2nd-edition.pdf
 # 應該顯示：沒有要提交的文件
 ```
 

@@ -32,7 +32,7 @@ export function MorphingSearch({
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
-        handleClose()
+        setIsOpen(false)
       }
     }
 
@@ -51,6 +51,7 @@ export function MorphingSearch({
   const handleClose = () => {
     setIsOpen(false)
     setQuery('')
+    onSearch?.('')
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

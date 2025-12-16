@@ -182,7 +182,8 @@ import { Button } from '../../../components/atoms/button'
 
 - 📦 **組件大小**：單個組件不超過 200 行，遵循單一職責
 - 🎯 **Props 設計**：Props 不超過 7 個，提供預設值
-- ⚡ **性能優化**：列表使用 memo、大列表分頁、圖片使用 Next.js Image
+- ⚡ **性能基本要求**：列表項有唯一 key、大列表分頁、圖片使用 Next.js Image
+- ⚠️ **避免過早優化**：不要預設使用 memo/useCallback/useMemo，除非有實測性能問題
 - 🎨 **使用 Tailwind CSS**：禁止內聯樣式和 CSS-in-JS
 - ♿ **可訪問性**：按鈕有 aria-label、圖片有 alt、表單有 label
 
@@ -196,11 +197,11 @@ import { Button } from '../../../components/atoms/button'
 
 ## UI 設計規範
 
-**主要設計參考**：@docs/Practical-UI.pdf *(需額外取得，見 @docs/README.md)*
+**主要設計參考**：@docs/Practical-UI-2nd-edition.pdf *(需額外取得，見 @docs/README.md)*
 **設計索引**：@docs/design-index.md *(必讀，包含完整索引)*
 
 > ⚠️ **重要說明**：
-> Practical-UI.pdf 因版權和檔案大小（146MB）原因未包含在版本控制中。
+> Practical-UI-2nd-edition.pdf（第二版）因版權和檔案大小（166MB）原因未包含在版本控制中。
 > 團隊成員請參考 @docs/README.md 了解如何向版權人索取並放置此文件。
 >
 > **沒有 PDF 也能開發**：`design-index.md` 已包含主要設計原則摘要。
@@ -274,15 +275,16 @@ import { Button } from '../../../components/atoms/button'
 
 ### 關鍵設計規範快速參考
 
-> 以下頁碼參考自 Practical-UI.pdf（如可用）。詳細內容請參考 @docs/design-index.md
+> 以下頁碼參考自 Practical-UI-2nd-edition.pdf（如可用）。詳細內容請參考 @docs/design-index.md
 
-- **基礎原則**：頁 14-42（建立設計系統、保持一致性、可訪問性）
-- **色彩系統**：頁 60-102（對比度、品牌色、明暗模式、調色板）
-- **佈局間距**：頁 104-161（12 欄網格、間距系統、視覺層級）
-- **字體排版**：頁 163-191（字體選擇、字級比例、行高、對齊）
-- **文案撰寫**：頁 192-211（簡潔、一致用詞、句首大寫）
-- **表單設計**：頁 213-248（單欄佈局、欄位標籤、驗證）
-- **按鈕設計**：頁 250-277（三級權重、左對齊、點擊目標大小）
+- **基礎原則**：第 1 章 (頁 16-53)（建立設計系統、保持一致性、可訪問性、互動狀態）
+- **極簡主義**：第 2 章 (頁 55-76)（移除不必要元素、漸進式揭露、減少選擇）
+- **色彩系統**：第 3 章 (頁 78-161)（對比度、品牌色、透明色彩、調色板規則）
+- **佈局間距**：第 4 章 (頁 163-227)（12 欄網格、間距系統、視覺層級、留白）
+- **字體排版**：第 5 章 (頁 229-264)（字體選擇、字級比例、行高、對齊）
+- **文案撰寫**：第 6 章 (頁 266-293)（簡潔、一致用詞、句首大寫、錯誤訊息）
+- **按鈕設計**：第 7 章 (頁 295-328)（三級權重、左對齊、點擊目標大小）
+- **表單設計**：第 8 章 (頁 330-369)（單欄佈局、欄位標籤、驗證方式）
 
 ### 設計工作流程
 
@@ -494,49 +496,147 @@ const isEmpty = data.length === 0
 
 ### 性能優化規範 ⚡
 
-#### 列表渲染優化
+#### ⚠️ 核心原則：不要過早優化
+
+**重要**：只在有**實測性能問題**時才進行優化。過早優化會降低代碼可讀性和維護性。
+
+**React 官方建議**：
+> "You don't need to wrap every function in useCallback. If your component doesn't have performance problems, you don't need to memoize anything."
+
+---
+
+#### React.memo 使用時機
+
+**只在以下情況使用**：
+1. 組件渲染成本高（大量 DOM、複雜計算）
+2. props 不常變化
+3. 有實測的性能問題
+
 ```typescript
-// ✅ 大列表使用分頁
+// ✅ 應該使用：列表項組件
+export const ProductCard = memo(function ProductCard({ product }: { product: Product }) {
+  // 組件會被渲染很多次，且 product 不常變
+  return <div>{product.name}</div>
+})
+
+// ❌ 不需要使用：簡單組件
+export function SimpleButton({ onClick, label }: ButtonProps) {
+  // 組件很簡單，不需要 memo
+  return <button onClick={onClick}>{label}</button>
+}
+```
+
+---
+
+#### useCallback 使用時機
+
+**只在以下情況使用**：
+1. ✅ 傳給使用了 `React.memo` 的子組件
+2. ✅ 函數在 `useEffect` / `useMemo` / `useCallback` 的依賴數組中
+3. ✅ 函數創建成本很高（包含複雜計算）
+
+```typescript
+// ✅ 正確使用：子組件有 memo
+const MemoChild = memo(function Child({ onClick }) {
+  return <button onClick={onClick}>Click</button>
+})
+
+function Parent() {
+  const handleClick = useCallback(() => {
+    console.log('clicked')
+  }, [])
+
+  return <MemoChild onClick={handleClick} />  // ← 子組件有 memo
+}
+
+// ❌ 錯誤使用：子組件沒有 memo
+function RegularChild({ onClick }) {  // ← 沒有 memo
+  return <button onClick={onClick}>Click</button>
+}
+
+function Parent() {
+  const handleClick = useCallback(() => {  // ← 沒有意義！
+    console.log('clicked')
+  }, [])
+
+  return <RegularChild onClick={handleClick} />
+}
+
+// ✅ 正確做法：不使用 useCallback
+function Parent() {
+  const handleClick = () => {  // ← 簡單清晰
+    console.log('clicked')
+  }
+
+  return <RegularChild onClick={handleClick} />
+}
+```
+
+---
+
+#### useMemo 使用時機
+
+**只在以下情況使用**：
+1. ✅ 計算成本很高（排序、過濾大量數據、複雜運算）
+2. ✅ 傳給使用了 `React.memo` 的子組件（穩定引用）
+3. ✅ 在依賴數組中使用
+
+```typescript
+// ✅ 正確使用：昂貴的計算
+const sortedProducts = useMemo(
+  () => products.sort((a, b) => b.price - a.price),  // 排序成本高
+  [products]
+)
+
+// ❌ 錯誤使用：簡單的計算
+const total = useMemo(() => a + b, [a, b])  // ← 沒必要
+const total = a + b  // ← 直接計算更好
+
+// ✅ 正確使用：穩定對象引用（配合 memo）
+const MemoChild = memo(function Child({ config }) { ... })
+
+function Parent() {
+  const config = useMemo(() => ({ theme: 'dark', size: 'large' }), [])
+  return <MemoChild config={config} />  // ← 子組件有 memo
+}
+
+// ❌ 錯誤使用：子組件沒有 memo
+function RegularChild({ config }) { ... }  // ← 沒有 memo
+
+function Parent() {
+  const config = useMemo(() => ({ theme: 'dark' }), [])  // ← 沒有意義！
+  return <RegularChild config={config} />
+}
+```
+
+---
+
+#### 列表渲染優化
+
+```typescript
+// ✅ 使用唯一 ID 作為 key
+products.map(product => (
+  <ProductCard key={product.id} product={product} />  // ← 使用 id，不是 index
+))
+
+// ✅ 大列表使用分頁（超過 50 項）
 const [page, setPage] = useState(1)
 const pageSize = 20
-
 const paginatedProducts = useMemo(
   () => products.slice((page - 1) * pageSize, page * pageSize),
   [products, page]
 )
 
-// ✅ 使用唯一 ID 作為 key
-products.map(product => (
-  <ProductCard key={product.id} product={product} />
-))
-
-// ✅ 列表項組件使用 memo
-const ProductCard = memo(({ product }: { product: Product }) => {
+// ✅ 列表項使用 memo（如果渲染成本高）
+const ProductCard = memo(function ProductCard({ product }) {
   return <div>{product.name}</div>
 })
 ```
 
-#### 使用 useCallback 和 useMemo
-```typescript
-// ✅ 傳給子組件的回調函數使用 useCallback
-const handleClick = useCallback(() => {
-  console.log('clicked')
-}, [])
-
-// ✅ 傳給子組件的對象使用 useMemo
-const config = useMemo(() => ({
-  theme: 'dark',
-  size: 'large'
-}), [])
-
-// ✅ 昂貴的計算使用 useMemo
-const total = useMemo(
-  () => products.reduce((sum, p) => sum + p.price, 0),
-  [products]
-)
-```
+---
 
 #### 圖片優化
+
 ```typescript
 // ✅ 使用 Next.js Image 組件
 import Image from 'next/image'
@@ -546,7 +646,7 @@ import Image from 'next/image'
   width={800}
   height={600}
   alt="Product"
-  priority // 首屏圖片使用 priority
+  priority  // 首屏圖片使用 priority
 />
 
 // ✅ 響應式圖片
@@ -559,14 +659,31 @@ import Image from 'next/image'
 />
 ```
 
-#### 性能檢查清單
-- [ ] 列表超過 50 項使用分頁
-- [ ] 所有列表項有唯一 key（使用 ID 而非 index）
-- [ ] 列表項組件使用 `React.memo`
-- [ ] 傳給子組件的回調使用 `useCallback`
-- [ ] 傳給子組件的物件/陣列使用 `useMemo`
+---
+
+#### 性能優化檢查清單
+
+**在添加優化之前，先問自己**：
+- [ ] 是否有實測的性能問題？（使用 React DevTools Profiler）
+- [ ] 子組件是否使用了 `React.memo`？（useCallback/useMemo 的前提）
+- [ ] 計算是否真的昂貴？（> 10ms？）
+- [ ] 優化後是否真的有改善？（再次測量）
+
+**基本要求**（無需優化）：
+- [ ] 列表項有唯一 key（使用 ID 而非 index）
+- [ ] 大列表使用分頁（超過 50 項）
 - [ ] 所有圖片使用 Next.js `Image` 組件
-- [ ] 避免在 render 中創建物件/函數/陣列
+
+**性能優化**（只在有問題時）：
+- [ ] 列表項組件使用 `React.memo`（如果渲染成本高）
+- [ ] 父組件的回調使用 `useCallback`（**前提**：子組件有 memo）
+- [ ] 父組件的物件/陣列使用 `useMemo`（**前提**：子組件有 memo）
+
+**記住**：
+- ✅ 清晰的代碼 > 過度優化的代碼
+- ✅ 可讀性優先，性能其次（除非有問題）
+- ✅ 先測量，再優化，後驗證
+- ❌ 不要為了「最佳實踐」而優化
 
 詳細範例請參考：@AI_CODE_REVIEW.md 第 3、5 章
 

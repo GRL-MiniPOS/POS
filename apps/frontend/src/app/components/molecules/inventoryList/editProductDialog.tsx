@@ -1,5 +1,6 @@
 'use client'
 
+import { AlertCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -52,7 +53,7 @@ export function EditProductDialog({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
 
-    if (name === 'price' || name === 'stock') {
+    if (name === 'price') {
       updateField(
         name as keyof IInventoryItem,
         value === '' ? 0 : parseFloat(value) || 0
@@ -61,6 +62,11 @@ export function EditProductDialog({
       updateField(name as keyof IInventoryItem, value)
     }
   }
+
+  // 計算目前表單中的總庫存
+  const currentTotalStock = formData.specifications
+    ? formData.specifications.reduce((total, spec) => total + spec.quantity, 0)
+    : 0
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -109,11 +115,6 @@ export function EditProductDialog({
               </SelectContent>
             </Select>
           </FormField>
-          <SpecificationInput
-            specifications={formData.specifications || []}
-            onChange={(specs) => updateField('specifications', specs)}
-            error={errors.specifications}
-          />
           <FormField
             label="價格 (NT$)"
             required
@@ -132,24 +133,28 @@ export function EditProductDialog({
               onChange={handleInputChange}
             />
           </FormField>
-          <FormField
-            label="庫存數量"
-            required
-            error={errors.stock}
-            htmlFor="stock"
-          >
-            <Input
-              id="stock"
-              name="stock"
-              type="number"
-              min="0"
-              step="1"
-              placeholder="請輸入庫存數量"
-              className="w-32"
-              value={formData.stock === 0 ? '' : formData.stock}
-              onChange={handleInputChange}
-            />
-          </FormField>
+          <SpecificationInput
+            specifications={formData.specifications || []}
+            onChange={(specs) => updateField('specifications', specs)}
+            error={errors.specifications}
+          />
+          {/* 警告：所有規格庫存為 0 */}
+          {currentTotalStock === 0 && (
+            <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+              <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+              <span className="text-sm text-destructive">
+                警告：所有規格庫存均為 0，該商品將顯示為缺貨
+              </span>
+            </div>
+          )}
+          {/* 顯示總庫存（只讀，由規格數量加總計算） */}
+          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-md">
+            <span className="text-sm text-muted-foreground">總庫存：</span>
+            <span className="font-semibold">{currentTotalStock} 件</span>
+            <span className="text-xs text-muted-foreground ml-2">
+              （由各規格數量自動計算）
+            </span>
+          </div>
           <FormField label="商品圖片 URL" htmlFor="image">
             <Input
               id="image"

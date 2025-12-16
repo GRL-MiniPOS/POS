@@ -1,23 +1,38 @@
+import type { IProductSpec } from './addProduct'
+
+/**
+ * 庫存項目類型
+ * specifications 使用統一的 IProductSpec 類型，包含規格名稱和數量
+ * 總庫存由各規格數量加總計算
+ */
 export interface IInventoryItem {
   id: string
   name: string
   category: string
-  specifications: string[]
+  specifications: IProductSpec[]
   price: number
-  stock: number
   selected: boolean
   createdAt: Date
   updatedAt: Date
   image: string
 }
 
+/**
+ * 計算庫存項目的總庫存量
+ */
+export function calculateTotalStock(item: IInventoryItem): number {
+  return item.specifications.reduce((total, spec) => total + spec.quantity, 0)
+}
+
 export interface IProduct {
   id: string
   name: string
   category: string
-  specification: string
+  specification: string // 用於搜索/篩選的字串格式
+  specifications: IProductSpec[] // 用於 Popover 顯示的結構化數據
   price: string
-  inventory: string
+  inventory: string // 顯示用的庫存文字
+  totalStock: number // 總庫存數量
   image: string
 }
 

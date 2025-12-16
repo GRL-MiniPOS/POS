@@ -1,31 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 import {
   useInventorySearch,
   useInventoryPagination,
   useInventorySelection,
   useInventoryFilter,
 } from '@/app/hooks'
-import type {
-  IProduct,
-  IInventoryItem,
-  IFilterState,
-  IDeleteDialogState,
-  IEditDialogState,
-} from '@/app/types/inventoryList'
+import { IInventoryItem, IFilterState } from '@/app/types/inventoryList'
 import { mockProducts as mockInventoryItems } from '@/app/product/inventory-list/mock/data'
-
-// 將 IInventoryItem 轉換為 IProduct 格式以供表格使用
-const convertToProduct = (item: IInventoryItem): IProduct => ({
-  id: item.id,
-  name: item.name,
-  category: item.category,
-  specification: item.specifications.join(', '),
-  price: `NT$ ${item.price.toLocaleString()}`,
-  inventory: item.stock === 0 ? '缺貨' : `${item.stock} 件`,
-  image: item.image,
-})
+import { convertToProduct } from '@/app/lib/inventoryUtils'
+import { useInventoryDelete } from './useInventoryDelete'
+import { useInventoryEdit } from './useInventoryEdit'
 
 const initialFilterState: IFilterState = {
   categories: [],
@@ -46,20 +31,14 @@ export function useInventoryList() {
   const [inventoryItems, setInventoryItems] =
     useState<IInventoryItem[]>(mockInventoryItems)
 
-  // Dialog States
-  const [deleteDialog, setDeleteDialog] = useState<IDeleteDialogState>({
-    open: false,
-    type: null,
-  })
-
-  const [editDialog, setEditDialog] = useState<IEditDialogState>({
-    open: false,
-    product: null,
-  })
-
   // 資料處理流程：filter → convert → search → paginate → select
   const filteredByCondition = useInventoryFilter(inventoryItems, filters)
-  const allProducts = filteredByCondition.map(convertToProduct)
+
+  const allProducts = useMemo(
+    () => filteredByCondition.map(convertToProduct),
+    [filteredByCondition]
+  )
+
   const filteredProducts = useInventorySearch(allProducts, searchQuery)
   const pagination = useInventoryPagination(filteredProducts, 5)
   const selection = useInventorySelection(
@@ -75,70 +54,27 @@ export function useInventoryList() {
     setCurrentPage(1)
   }, [searchQuery, setCurrentPage])
 
+  // Sub-hooks for Delete and Edit logic
+  const {
+    deleteDialog,
+    handleDelete,
+    handleBulkDelete,
+    handleConfirmDelete,
+    handleCloseDeleteDialog,
+  } = useInventoryDelete({
+    setInventoryItems,
+    selection,
+  })
+
+  const { editDialog, setEditDialog, handleEdit, handleSaveEdit } =
+    useInventoryEdit({
+      inventoryItems,
+      setInventoryItems,
+    })
+
   // Handlers
   const handleAddProduct = () => router.push('/product/add-product')
   const handleSearch = (query: string) => setSearchQuery(query)
-
-  // Delete Dialog Logic
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialog({ open: false, type: null })
-  }
-
-  const handleDelete = (id: string) => {
-    setDeleteDialog({
-      open: true,
-      type: 'single',
-      productId: id,
-    })
-  }
-
-  const handleBulkDelete = () => {
-    const selectedIds = Array.from(selection.selectedRows)
-    if (selectedIds.length === 0) {
-      toast.error('請先選擇要刪除的商品')
-      return
-    }
-    setDeleteDialog({
-      open: true,
-      type: 'bulk',
-      selectedCount: selectedIds.length,
-    })
-  }
-
-  const handleConfirmDelete = () => {
-    if (deleteDialog.type === 'single' && deleteDialog.productId) {
-      setInventoryItems((prev) =>
-        prev.filter((item) => item.id !== deleteDialog.productId)
-      )
-      toast.success('已成功刪除商品')
-    } else if (deleteDialog.type === 'bulk') {
-      setInventoryItems((prev) =>
-        prev.filter((item) => !selection.selectedRows.has(item.id))
-      )
-      selection.clearSelection()
-      toast.success(`已成功刪除 ${deleteDialog.selectedCount} 個商品`)
-    }
-    handleCloseDeleteDialog()
-  }
-
-  // Edit Dialog Logic
-  const handleEdit = (id: string) => {
-    const item = inventoryItems.find((item) => item.id === id)
-    if (item) {
-      setEditDialog({ open: true, product: item })
-    }
-  }
-
-  const handleSaveEdit = (updatedProduct: Partial<IInventoryItem>) => {
-    setInventoryItems((prev) =>
-      prev.map((item) =>
-        item.id === updatedProduct.id
-          ? { ...item, ...updatedProduct, updatedAt: new Date() }
-          : item
-      )
-    )
-    toast.success('已成功更新商品資訊')
-  }
 
   return {
     tableData: {

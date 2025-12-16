@@ -1,5 +1,8 @@
+import { memo } from 'react'
 import { cn } from '@/app/lib/utils'
 import { Checkbox, Delete, Edit } from '@/app/components/atoms'
+import { SpecificationPopover } from '@/app/components/molecules'
+import type { IProductSpec } from '@/app/types/addProduct'
 import Image from 'next/image'
 
 interface IStockManageListItemProps {
@@ -7,9 +10,9 @@ interface IStockManageListItemProps {
   imageUrl: string
   name: string
   category: string
-  spec: string
+  specifications: IProductSpec[]
   price: string | number
-  stock: string | number
+  totalStock: number
   size?: 'small' | 'medium' | 'large'
   className?: string
   onCheck: (checked: boolean) => void
@@ -23,14 +26,14 @@ const sizeMap = {
   large: 80,
 }
 
-export function StockManageListItem({
+export const StockManageListItem = memo(function StockManageListItem({
   checked,
   imageUrl,
   name,
   category,
-  spec,
+  specifications,
   price,
-  stock,
+  totalStock,
   size = 'medium',
   className,
   onCheck,
@@ -65,15 +68,20 @@ export function StockManageListItem({
         <div className="flex-1 px-4">{name}</div>
       </div>
       <div className="flex-1 px-4">{category}</div>
-      <div className="flex-1 px-4">{spec}</div>
+      <div className="flex-1 px-4">
+        <SpecificationPopover
+          specifications={specifications}
+          totalStock={totalStock}
+        />
+      </div>
       <div className="flex-1 px-4">{price}</div>
-      <div className="flex-1 px-4">{stock}</div>
+      <div className="flex-1 px-4">
+        {totalStock === 0 ? '缺貨' : `${totalStock} 件`}
+      </div>
       <div className="w-32 ml-auto flex items-center space-x-4 px-6">
         <Edit onClick={onEdit} />
         <Delete onClick={onDelete} />
       </div>
     </div>
   )
-}
-
-export default StockManageListItem
+})

@@ -1,4 +1,5 @@
 import type { IInventoryItem, IFilterState } from '@/app/types/inventoryList'
+import { calculateTotalStock } from '@/app/types/inventoryList'
 
 export function useInventoryFilter(
   items: IInventoryItem[],
@@ -12,10 +13,13 @@ export function useInventoryFilter(
       }
     }
 
-    // 2. 規格篩選（OR 邏輯：商品規格包含任一選中規格即可）
+    // 2. 規格篩選（OR 邏輯：商品規格名稱包含任一選中規格即可）
     if (filters.specifications.length > 0) {
+      // 提取規格名稱，支援部分匹配（例如篩選 "黑色" 可匹配 "黑色 M"）
       const hasMatchingSpec = filters.specifications.some((filterSpec) =>
-        item.specifications.includes(filterSpec)
+        item.specifications.some((itemSpec) =>
+          itemSpec.name.includes(filterSpec)
+        )
       )
       if (!hasMatchingSpec) {
         return false
@@ -30,11 +34,12 @@ export function useInventoryFilter(
       return false
     }
 
-    // 4. 庫存狀態篩選
-    if (filters.stockStatus === 'in-stock' && item.stock === 0) {
+    // 4. 庫存狀態篩選（基於總庫存量）
+    const totalStock = calculateTotalStock(item)
+    if (filters.stockStatus === 'in-stock' && totalStock === 0) {
       return false
     }
-    if (filters.stockStatus === 'out-of-stock' && item.stock > 0) {
+    if (filters.stockStatus === 'out-of-stock' && totalStock > 0) {
       return false
     }
 

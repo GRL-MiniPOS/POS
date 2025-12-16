@@ -74,9 +74,9 @@ export function InventoryTableContent({
             imageUrl={product.image}
             name={product.name}
             category={product.category}
-            spec={product.specification}
+            specifications={product.specifications}
             price={product.price}
-            stock={product.inventory}
+            totalStock={product.totalStock}
             onCheck={(checked) => onSelectRow(product.id, checked)}
             onEdit={() => onEdit(product.id)}
             onDelete={() => onDelete(product.id)}

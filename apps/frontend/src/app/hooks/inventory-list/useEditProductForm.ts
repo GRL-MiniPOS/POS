@@ -6,7 +6,6 @@ interface FormErrors {
   category?: string
   specifications?: string
   price?: string
-  stock?: string
 }
 
 export function useEditProductForm(product: IInventoryItem) {
@@ -15,7 +14,6 @@ export function useEditProductForm(product: IInventoryItem) {
     category: '',
     specifications: [],
     price: 0,
-    stock: 0,
     image: '',
   })
 
@@ -38,16 +36,39 @@ export function useEditProductForm(product: IInventoryItem) {
       newErrors.category = '請選擇商品分類'
     }
 
-    if (!formData.specifications || formData.specifications.length === 0) {
-      newErrors.specifications = '至少需要 1 個規格'
+    if (formData.specifications && formData.specifications.length > 0) {
+      // 檢查規格名稱是否為空
+      const hasEmptyName = formData.specifications.some(
+        (spec) => !spec.name?.trim()
+      )
+      if (hasEmptyName) {
+        newErrors.specifications = '規格名稱不可為空'
+      } else {
+        // 檢查重複規格名稱
+        const specNames = formData.specifications.map((spec) =>
+          spec.name.trim()
+        )
+        const duplicates = specNames.filter(
+          (name, index) => specNames.indexOf(name) !== index
+        )
+        if (duplicates.length > 0) {
+          newErrors.specifications = `規格名稱不可重複：${duplicates[0]}`
+        }
+      }
+
+      // 檢查規格數量是否為負數
+      if (!newErrors.specifications) {
+        const hasNegativeQuantity = formData.specifications.some(
+          (spec) => spec.quantity < 0
+        )
+        if (hasNegativeQuantity) {
+          newErrors.specifications = '規格數量不可為負數'
+        }
+      }
     }
 
     if (formData.price === undefined || formData.price < 0) {
       newErrors.price = '價格必須大於或等於 0'
-    }
-
-    if (formData.stock === undefined || formData.stock < 0) {
-      newErrors.stock = '庫存數量必須大於或等於 0'
     }
 
     setErrors(newErrors)

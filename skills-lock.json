@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "Shadcn UI & Blocks": {
+      "source": "masonjames/Shadcnblocks-Skill",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn-ui/SKILL.md",
+      "computedHash": "e28d4dfdf10928a0a59a8b7c7a67cb34b13eb11123fa9fe91741474d766ae253"
+    },
+    "mastering-typescript": {
+      "source": "SpillwaveSolutions/mastering-typescript-skill",
+      "sourceType": "github",
+      "skillPath": "mastering-typescript/SKILL.md",
+      "computedHash": "144b5c2feda736321f0383a08dafd74b23abc5d95102daba2aab245ff9435518"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "f0fdd03f4755cbb3b57e20fe6fd4a97c00d34e6780187b6559316986e8d848db"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "computedHash": "d8e7d3afe37dcc8a97b99ffb5afdb4d0919ae0092ea8b68f44eb201f035e33ac"
+    },
+    "webapp-testing": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/webapp-testing/SKILL.md",
+      "computedHash": "3f14af7f5690695209c22fbf8c8d133769a86d64892602c09bb13f135e14e857"
+    }
+  }
+}

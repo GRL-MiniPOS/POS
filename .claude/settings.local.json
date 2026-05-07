@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"C:\\\\Users\\\\ig2506\\\\Documents\\\\POS\\\\apps\\\\frontend\\\\docs\\\\\\\\\")"
+    ]
+  }
+}

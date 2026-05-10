@@ -2,7 +2,6 @@ package sql
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github/pos/internal/config"
@@ -75,36 +74,24 @@ func dsn(dbConfig config.DatabaseConfig) string {
 	)
 }
 
-type TransactionAbility[T any] interface {
-	ProvideExt() sqlx.ExtContext
-	Transaction(ctx context.Context, fn func(T) error) error
-}
-
-func Transaction[T any, E TransactionAbility[T]](ctx context.Context, instance E, fn func(*sqlx.Tx) error) (err error) {
-	db := instance.ProvideExt()
-	switch db := db.(type) {
-	case *sqlx.Tx:
-		return fn(db)
-	case *sqlx.DB:
-		tx, err := db.BeginTxx(ctx, nil)
-		if err != nil {
-			return fmt.Errorf("failed to start transaction: %w", err)
-		}
-		defer func() {
-			if p := recover(); p != nil {
-				_ = tx.Rollback()
-				panic(p) // re-throw the panic after rollback
-			} else if err != nil {
-				err = errors.Join(tx.Rollback(), err)
-			}
-		}()
-
-		if err = fn(tx); err != nil {
-			return err
-		}
-
-		return tx.Commit()
-	default:
-		return errors.New("unknown sqlx.ExtContext type")
+func RunInTx(ctx context.Context, db *sqlx.DB, fn func(tx *sqlx.Tx) error) error {
+	tx, err := db.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
 	}
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p) // re-throw the panic after rollback
+		}
+	}()
+
+	if err := fn(tx); err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return fmt.Errorf("failed to rollback transaction: %v (original error: %w)", rbErr, err)
+		}
+		return err
+	}
+
+	return tx.Commit()
 }

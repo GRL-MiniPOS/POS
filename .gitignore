@@ -1,4 +1,10 @@
 node_modules
+apps/backend/.gocache/
+apps/backend/assets/
+apps/backend/internal/handler/assets/
+apps/backend/bin/
 
 .env*
 !.env.example
+Agent.md
+CLAUDE.md

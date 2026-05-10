@@ -14,7 +14,7 @@ import (
 //go:embed scripts/*.sql
 var scripts embed.FS
 
-const version = 20241209
+const version = 20260510
 
 type Params struct {
 	fx.In

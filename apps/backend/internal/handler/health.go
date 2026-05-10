@@ -8,12 +8,19 @@ import (
 )
 
 type HealthResponse struct {
-	Status    string    `json:"status"`
-	Timestamp time.Time `json:"timestamp"`
-	Version   string    `json:"version"`
-	DBStatus  string    `json:"db_status"`
+	Status    string    `json:"status" example:"ok"`
+	Timestamp time.Time `json:"timestamp" example:"2025-01-04T10:00:00Z"`
+	Version   string    `json:"version" example:"1.0.0"`
+	DBStatus  string    `json:"db_status" example:"up"`
 }
 
+// Health godoc
+// @Summary      健康檢查
+// @Description  檢查服務和資料庫的健康狀態
+// @Tags         System
+// @Produce      json
+// @Success      200  {object}  HealthResponse
+// @Router       /health [get]
 func (h *Handler) Health(c *gin.Context) {
 	dbStatus := "up"
 	if err := h.db.ReadDB.Ping(); err != nil {

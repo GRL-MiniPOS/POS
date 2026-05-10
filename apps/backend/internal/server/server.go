@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github/pos/internal/config"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 )
 
 var Module = fx.Options(
 	fx.Provide(New),
-	fx.Provide(func() string {
-		return "8002"
-	}),
 )
 
 type Server struct {
@@ -22,7 +21,7 @@ type Server struct {
 
 type Params struct {
 	fx.In
-	Port string
+	Cfg *config.Config
 }
 
 func New(p Params) *Server {
@@ -34,7 +33,7 @@ func New(p Params) *Server {
 
 	return &Server{
 		engine: engine,
-		port:   p.Port,
+		port:   p.Cfg.Port,
 	}
 }
 
@@ -46,7 +45,7 @@ func (s *Server) Hook() fx.Hook {
 	return fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
-				if err := s.engine.Run(fmt.Sprintf(":%s", s.port)); err != nil {
+				if err := s.engine.Run(fmt.Sprintf("0.0.0.0:%s", s.port)); err != nil {
 					panic(err)
 				}
 			}()

@@ -1,0 +1,1161 @@
+basePath: /api
+definitions:
+  dto.AssetResponse:
+    properties:
+      created_at:
+        example: "2026-05-07T10:00:00Z"
+        type: string
+      height:
+        example: 1200
+        type: integer
+      id:
+        example: bdf73d34-54d4-4e3f-b47b-2fcbfc33a51f
+        type: string
+      mime:
+        example: image/jpeg
+        type: string
+      name:
+        example: product-a.jpg
+        type: string
+      size:
+        example: 523412
+        type: integer
+      thumb_url:
+        type: string
+        x-nullable: true
+      url:
+        example: http://localhost:8002/assets/2026/05/product-a.jpg
+        type: string
+      width:
+        example: 1600
+        type: integer
+    type: object
+  dto.BatchDeleteProductResponse:
+    properties:
+      deleted_count:
+        example: 2
+        type: integer
+      message:
+        example: 2 個商品已刪除
+        type: string
+    type: object
+  dto.BatchDeleteProductSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.BatchDeleteProductResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.BatchDeleteRequest:
+    properties:
+      ids:
+        example:
+        - 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - ids
+    type: object
+  dto.CategoryListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.CategoryResponse'
+        type: array
+      success:
+        example: true
+        type: boolean
+      total:
+        example: 2
+        type: integer
+    type: object
+  dto.CategoryResponse:
+    properties:
+      active:
+        example: true
+        type: boolean
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      id:
+        example: 2c619823-aa6b-4e7e-931f-c8358bb07861
+        type: string
+      name:
+        example: 上衣
+        type: string
+      order:
+        example: 1
+        type: integer
+      parent_id:
+        example: 2c619823-aa6b-4e7e-931f-c8358bb07861
+        type: string
+        x-nullable: true
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  dto.CreateCategoryRequest:
+    properties:
+      name:
+        example: 上衣
+        maxLength: 100
+        minLength: 1
+        type: string
+      order:
+        example: 1
+        type: integer
+      parent_id:
+        example: 2c619823-aa6b-4e7e-931f-c8358bb07861
+        type: string
+        x-nullable: true
+    required:
+    - name
+    type: object
+  dto.CreateCategoryResponse:
+    properties:
+      id:
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        type: string
+      message:
+        example: 分類新增成功
+        type: string
+    type: object
+  dto.CreateCategorySuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.CreateCategoryResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.CreateProductRequest:
+    properties:
+      category_id:
+        example: 2c619823-aa6b-4e7e-931f-c8358bb07861
+        type: string
+      image_ids:
+        items:
+          type: string
+        type: array
+      name:
+        example: 經典白色T恤
+        maxLength: 100
+        minLength: 1
+        type: string
+      option_groups:
+        items:
+          $ref: '#/definitions/dto.ProductOptionGroupRequest'
+        maxItems: 2
+        type: array
+      price:
+        example: "590"
+        type: string
+      quantity:
+        example: 0
+        minimum: 0
+        type: integer
+      sale_status:
+        enum:
+        - active
+        - inactive
+        example: active
+        type: string
+      variants:
+        items:
+          $ref: '#/definitions/dto.ProductVariantRequest'
+        type: array
+    required:
+    - category_id
+    - name
+    - price
+    type: object
+  dto.CreateProductResponse:
+    properties:
+      id:
+        example: 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
+        type: string
+      message:
+        example: 商品新增成功
+        type: string
+    type: object
+  dto.CreateProductSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.CreateProductResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.DeleteCategoryResponse:
+    properties:
+      message:
+        example: 分類刪除成功
+        type: string
+    type: object
+  dto.DeleteCategorySuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.DeleteCategoryResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.DeleteProductResponse:
+    properties:
+      message:
+        example: 商品刪除成功
+        type: string
+    type: object
+  dto.DeleteProductSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.DeleteProductResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.ErrorDetail:
+    properties:
+      code:
+        example: VALIDATION_ERROR
+        type: string
+      failed_ids:
+        example:
+        - 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
+        items:
+          type: string
+        type: array
+      fields:
+        items:
+          $ref: '#/definitions/dto.ValidationFieldError'
+        type: array
+      message:
+        example: 請求參數驗證失敗
+        type: string
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/dto.ErrorDetail'
+      success:
+        example: false
+        type: boolean
+    type: object
+  dto.OrderCreateRequest:
+    properties:
+      customer_id:
+        example: 20a97d01-4c0b-4f52-84dd-7e5b36d22cc1
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/dto.OrderItemCreateRequest'
+        minItems: 1
+        type: array
+      payment:
+        example: bank_transfer
+        type: string
+      source:
+        example: instagram
+        type: string
+    required:
+    - items
+    type: object
+  dto.OrderCreateSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.OrderResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.OrderItemCreateRequest:
+    properties:
+      product_id:
+        example: 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
+        type: string
+      product_variant_id:
+        example: 9b0d5d3d-6e44-43ad-9952-d80f9204fd9f
+        type: string
+      quantity:
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  dto.OrderItemResponse:
+    properties:
+      id:
+        example: fcb4f63c-bb91-45f2-9756-837bc2df0d68
+        type: string
+      product_id:
+        example: 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
+        type: string
+      product_name:
+        example: 經典白色T恤
+        type: string
+      product_variant_id:
+        example: 9b0d5d3d-6e44-43ad-9952-d80f9204fd9f
+        type: string
+      quantity:
+        example: 2
+        type: integer
+      subtotal:
+        example: 1180
+        type: integer
+      unit_price:
+        example: 590
+        type: integer
+      variant:
+        $ref: '#/definitions/dto.ProductVariantResponse'
+    type: object
+  dto.OrderResponse:
+    properties:
+      created_at:
+        example: "2026-05-10T10:00:00Z"
+        type: string
+      customer_id:
+        example: 20a97d01-4c0b-4f52-84dd-7e5b36d22cc1
+        type: string
+      id:
+        example: 71852cd1-d5e6-43f2-8c63-3118ef0117bb
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/dto.OrderItemResponse'
+        type: array
+      original_price:
+        example: 1180
+        type: integer
+      payment:
+        example: bank_transfer
+        type: string
+      source:
+        example: instagram
+        type: string
+      status:
+        enum:
+        - pending
+        - processing
+        - shipped
+        - completed
+        - cancelled
+        example: pending
+        type: string
+      total_price:
+        example: 1180
+        type: integer
+      updated_at:
+        example: "2026-05-10T10:00:00Z"
+        type: string
+    type: object
+  dto.PaginationResponse:
+    properties:
+      current_page:
+        example: 1
+        type: integer
+      per_page:
+        example: 10
+        type: integer
+      total_items:
+        example: 42
+        type: integer
+      total_pages:
+        example: 5
+        type: integer
+    type: object
+  dto.ProductCategoryInfo:
+    properties:
+      id:
+        example: 2c619823-aa6b-4e7e-931f-c8358bb07861
+        type: string
+      name:
+        example: 上衣
+        type: string
+    type: object
+  dto.ProductDetailResponse:
+    properties:
+      can_order:
+        example: true
+        type: boolean
+      category:
+        $ref: '#/definitions/dto.ProductCategoryInfo'
+      created_at:
+        example: "2026-05-07T10:00:00Z"
+        type: string
+      has_variants:
+        example: true
+        type: boolean
+      id:
+        example: 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
+        type: string
+      image:
+        example: http://localhost:8002/assets/2026/05/product-a.jpg
+        type: string
+      name:
+        example: 經典白色T恤
+        type: string
+      option_groups:
+        items:
+          $ref: '#/definitions/dto.ProductOptionGroupResponse'
+        type: array
+      price:
+        example: 590
+        type: integer
+      quantity:
+        example: 0
+        type: integer
+      sale_status:
+        enum:
+        - active
+        - inactive
+        example: active
+        type: string
+      stock:
+        example: 0
+        type: integer
+      stock_status:
+        enum:
+        - in-stock
+        - out-of-stock
+        example: out-of-stock
+        type: string
+      updated_at:
+        example: "2026-05-07T10:00:00Z"
+        type: string
+      variants:
+        items:
+          $ref: '#/definitions/dto.ProductVariantResponse'
+        type: array
+    type: object
+  dto.ProductDetailSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.ProductDetailResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.ProductListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.ProductResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/dto.PaginationResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.ProductOptionGroupRequest:
+    properties:
+      name:
+        example: 顏色
+        maxLength: 30
+        minLength: 1
+        type: string
+      values:
+        example:
+        - 白色
+        - 黑色
+        items:
+          type: string
+        maxItems: 50
+        minItems: 1
+        type: array
+    required:
+    - name
+    - values
+    type: object
+  dto.ProductOptionGroupResponse:
+    properties:
+      id:
+        example: 21a4c97a-8f60-4f50-9d37-13b8e43f39ce
+        type: string
+      name:
+        example: 顏色
+        type: string
+      position:
+        example: 0
+        type: integer
+      values:
+        example:
+        - 白色
+        - 黑色
+        items:
+          type: string
+        type: array
+    type: object
+  dto.ProductOptionListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.ProductOptionGroupResponse'
+        type: array
+      success:
+        example: true
+        type: boolean
+      total:
+        example: 2
+        type: integer
+    type: object
+  dto.ProductResponse:
+    properties:
+      can_order:
+        example: true
+        type: boolean
+      category:
+        $ref: '#/definitions/dto.ProductCategoryInfo'
+      created_at:
+        example: "2026-05-07T10:00:00Z"
+        type: string
+      has_variants:
+        example: true
+        type: boolean
+      id:
+        example: 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
+        type: string
+      image:
+        example: http://localhost:8002/assets/2026/05/product-a.jpg
+        type: string
+      name:
+        example: 經典白色T恤
+        type: string
+      option_groups:
+        items:
+          $ref: '#/definitions/dto.ProductOptionGroupResponse'
+        type: array
+      price:
+        example: 590
+        type: integer
+      quantity:
+        example: 0
+        type: integer
+      sale_status:
+        enum:
+        - active
+        - inactive
+        example: active
+        type: string
+      stock:
+        example: 0
+        type: integer
+      stock_status:
+        enum:
+        - in-stock
+        - out-of-stock
+        example: out-of-stock
+        type: string
+      updated_at:
+        example: "2026-05-07T10:00:00Z"
+        type: string
+      variants:
+        items:
+          $ref: '#/definitions/dto.ProductVariantResponse'
+        type: array
+    type: object
+  dto.ProductVariantRequest:
+    properties:
+      id:
+        example: 9b0d5d3d-6e44-43ad-9952-d80f9204fd9f
+        type: string
+      option_values:
+        additionalProperties:
+          type: string
+        example:
+          尺寸: S
+          顏色: 白色
+        type: object
+      quantity:
+        example: 0
+        minimum: 0
+        type: integer
+      sale_status:
+        enum:
+        - active
+        - inactive
+        example: active
+        type: string
+    required:
+    - option_values
+    type: object
+  dto.ProductVariantResponse:
+    properties:
+      can_order:
+        example: true
+        type: boolean
+      id:
+        example: 9b0d5d3d-6e44-43ad-9952-d80f9204fd9f
+        type: string
+      option_values:
+        additionalProperties:
+          type: string
+        example:
+          尺寸: S
+          顏色: 白色
+        type: object
+      quantity:
+        example: 0
+        type: integer
+      sale_status:
+        enum:
+        - active
+        - inactive
+        example: active
+        type: string
+      stock_status:
+        enum:
+        - in-stock
+        - out-of-stock
+        example: out-of-stock
+        type: string
+    type: object
+  dto.UpdateProductRequest:
+    properties:
+      category_id:
+        example: 2c619823-aa6b-4e7e-931f-c8358bb07861
+        type: string
+      image_ids:
+        items:
+          type: string
+        type: array
+      name:
+        example: 經典黑色T恤
+        maxLength: 100
+        minLength: 1
+        type: string
+      option_groups:
+        items:
+          $ref: '#/definitions/dto.ProductOptionGroupRequest'
+        maxItems: 2
+        type: array
+      price:
+        example: "690"
+        type: string
+      quantity:
+        example: 0
+        minimum: 0
+        type: integer
+      sale_status:
+        enum:
+        - active
+        - inactive
+        example: active
+        type: string
+      variants:
+        items:
+          $ref: '#/definitions/dto.ProductVariantRequest'
+        type: array
+    type: object
+  dto.UpdateProductResponse:
+    properties:
+      id:
+        example: 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
+        type: string
+      message:
+        example: 商品更新成功
+        type: string
+    type: object
+  dto.UpdateProductSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.UpdateProductResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.UploadAssetsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.AssetResponse'
+        type: array
+      success:
+        example: true
+        type: boolean
+      total:
+        example: 2
+        type: integer
+    type: object
+  dto.ValidationFieldError:
+    properties:
+      field:
+        example: image_ids[0]
+        type: string
+      message:
+        example: 必須是合法 UUID
+        type: string
+    type: object
+  handler.HealthResponse:
+    properties:
+      db_status:
+        example: up
+        type: string
+      status:
+        example: ok
+        type: string
+      timestamp:
+        example: "2025-01-04T10:00:00Z"
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+host: localhost:8002
+info:
+  contact:
+    email: support@pos.com
+    name: API Support
+  description: 完整的 POS 系統後端 API，包含商品管理、分類管理、庫存管理等功能
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: POS System API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: 檢查服務和資料庫的健康狀態
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.HealthResponse'
+      summary: 健康檢查
+      tags:
+      - System
+  /orders:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        建立手動訂單。若商品有 variants，items[].product_variant_id 必填；若商品無 variants，items[].product_variant_id 不可提供。product_variant_id 必須屬於 product_id。product 或 variant 下架時不可加入訂單。quantity=0 的商品/variant 仍可預購，不阻擋下單。
+
+        有變體商品訂單範例：{"source":"instagram","payment":"bank_transfer","items":[{"product_id":"...","product_variant_id":"...","quantity":1}]}
+
+        無變體商品訂單範例：{"source":"facebook","payment":"cash","items":[{"product_id":"...","quantity":1}]}
+
+        錯誤範例：商品有變體但未帶 product_variant_id 時，回傳 VALIDATION_ERROR，field 為 items[0].product_variant_id。
+      parameters:
+      - description: 訂單資訊
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.OrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.OrderCreateSuccessResponse'
+        "400":
+          description: VALIDATION_ERROR / BUSINESS_RULE_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: PRODUCT_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: INTERNAL_SERVER_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 新增訂單
+      tags:
+      - Orders
+  /product-categories:
+    get:
+      description: 取得所有商品分類，支援 active 和 parent_id 篩選
+      parameters:
+      - default: "true"
+        description: 是否只顯示啟用的分類 (true/false)
+        in: query
+        name: active
+        type: string
+      - description: 父分類 ID；不傳回全部分類，空字串表示頂層分類，UUID 表示指定父分類下的子分類
+        in: query
+        name: parent_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.CategoryListResponse'
+        "500":
+          description: 伺服器錯誤
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 取得商品分類列表
+      tags:
+      - Categories
+    post:
+      consumes:
+      - application/json
+      description: 新增一個新的商品分類。頂層分類請省略 parent_id 或傳 null；子分類請傳父分類 UUID；parent_id 不接受空字串。order
+        不傳時會自動排到同層最後。
+      parameters:
+      - description: 分類資訊
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.CreateCategorySuccessResponse'
+        "400":
+          description: 參數錯誤或分類名稱已存在
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 伺服器錯誤
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 新增商品分類
+      tags:
+      - Categories
+  /product-categories/{id}:
+    delete:
+      description: 刪除指定分類（會一併刪除子分類，商品轉為未分類）
+      parameters:
+      - description: 分類 ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.DeleteCategorySuccessResponse'
+        "400":
+          description: 分類仍有庫存商品
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: 分類不存在
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 伺服器錯誤
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 刪除商品分類
+      tags:
+      - Categories
+  /product-options:
+    get:
+      description: 取得所有商品使用過的自訂 option_groups 與 values（去重）。option_groups 是規格類型，例如「顏色」「尺寸」「款式」；variants
+        是實際可販售組合。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.ProductOptionListResponse'
+        "500":
+          description: INTERNAL_SERVER_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 取得所有商品選項
+      tags:
+      - Products
+  /products:
+    get:
+      description: 取得商品列表，支援搜尋、分類、規格值、價格、庫存狀態、上下架狀態篩選。預購商品 quantity=0 時 stock_status=out-of-stock，但
+        sale_status=active 仍 can_order=true。
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      - description: 商品名稱搜尋
+        in: query
+        name: search
+        type: string
+      - description: 分類 ID
+        in: query
+        name: categories[]
+        type: string
+      - description: 規格名稱或規格值搜尋，例如 白色、S、顏色
+        in: query
+        name: options[]
+        type: string
+      - description: 最低價格
+        in: query
+        name: priceMin
+        type: integer
+      - description: 最高價格
+        in: query
+        name: priceMax
+        type: integer
+      - default: all
+        description: 庫存狀態 (all/in-stock/out-of-stock)
+        in: query
+        name: stockStatus
+        type: string
+      - default: all
+        description: 上下架狀態 (all/active/inactive)
+        in: query
+        name: saleStatus
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.ProductListResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: INTERNAL_SERVER_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 取得商品列表
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      description: |-
+        新增商品。最多兩層自訂規格；option_groups 為空代表無變體商品，使用商品層級 quantity。若有 option_groups，必須提供 variants，庫存由 variant.quantity 管理。quantity=0 僅代表無現貨，sale_status=active 時仍可預購。
+
+        無變體範例：{"name":"銀色項鍊","category_id":"...","price":"590","quantity":0,"sale_status":"active","option_groups":[],"variants":[]}
+
+        一層規格範例：{"name":"托特包","category_id":"...","price":"1280","option_groups":[{"name":"款式","values":["現貨","預購"]}],"variants":[{"option_values":{"款式":"現貨"},"quantity":3},{"option_values":{"款式":"預購"},"quantity":0}]}
+
+        兩層規格範例：{"name":"經典T恤","category_id":"...","price":"590","option_groups":[{"name":"顏色","values":["白色","黑色"]},{"name":"尺寸","values":["S","M"]}],"variants":[{"option_values":{"顏色":"白色","尺寸":"S"},"quantity":0,"sale_status":"active"}]}
+      parameters:
+      - description: 商品資訊；無變體商品使用 quantity，有變體商品使用 variants[].quantity
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.CreateProductSuccessResponse'
+        "400":
+          description: VALIDATION_ERROR / BUSINESS_RULE_ERROR / 圖片或分類不存在
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: CONFLICT：重複變體組合
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: INTERNAL_SERVER_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 新增商品
+      tags:
+      - Products
+  /products/{id}:
+    delete:
+      description: 刪除指定商品（若有未完成訂單則無法刪除）
+      parameters:
+      - description: 商品 ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.DeleteProductSuccessResponse'
+        "400":
+          description: VALIDATION_ERROR / PRODUCT_IN_USE
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: PRODUCT_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: INTERNAL_SERVER_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 刪除商品
+      tags:
+      - Products
+    get:
+      description: 取得商品完整資訊，包含分類、圖片、option_groups、variants、stock_status、sale_status、can_order。stock_status
+        只反映庫存；can_order 只反映是否可下單。
+      parameters:
+      - description: 商品 ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.ProductDetailSuccessResponse'
+        "400":
+          description: VALIDATION_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: PRODUCT_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: INTERNAL_SERVER_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 取得單一商品
+      tags:
+      - Products
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        部分更新商品資訊。若帶 option_groups 或 variants，兩者必須一起提供，並會完整替換商品規格結構。無變體商品不可有 variants；有變體商品必須在訂單中指定 product_variant_id。
+
+        更新為無變體範例：{"quantity":0,"option_groups":[],"variants":[]}
+
+        更新兩層規格範例：{"option_groups":[{"name":"顏色","values":["白色"]},{"name":"尺寸","values":["S"]}],"variants":[{"option_values":{"顏色":"白色","尺寸":"S"},"quantity":0,"sale_status":"active"}]}
+      parameters:
+      - description: 商品 ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 要更新的商品資訊
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.UpdateProductSuccessResponse'
+        "400":
+          description: VALIDATION_ERROR / BUSINESS_RULE_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: PRODUCT_NOT_FOUND
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: CONFLICT：重複變體組合
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: INTERNAL_SERVER_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 更新商品
+      tags:
+      - Products
+  /products/batch-delete:
+    post:
+      consumes:
+      - application/json
+      description: 批量刪除多個商品
+      parameters:
+      - description: 商品 ID 陣列
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BatchDeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.BatchDeleteProductSuccessResponse'
+        "400":
+          description: VALIDATION_ERROR / SOME_PRODUCTS_IN_USE
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: INTERNAL_SERVER_ERROR
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 批量刪除商品
+      tags:
+      - Products
+  /upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上傳一個或多個圖片檔案，支援 JPEG, PNG, GIF, WebP 格式，單檔最大 10MB
+      parameters:
+      - description: 圖片檔案（可多選）
+        in: formData
+        name: files
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.UploadAssetsResponse'
+        "400":
+          description: 檔案格式不支援或檔案過大
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 伺服器錯誤
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 上傳圖片
+      tags:
+      - Upload
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

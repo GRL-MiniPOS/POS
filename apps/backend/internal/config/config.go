@@ -47,7 +47,7 @@ func New() (*Config, error) {
 	if err := godotenv.Load(envFile); err != nil {
 		log.Printf("Warning: %s not found, falling back to .env\n", envFile)
 		if err := godotenv.Load(); err != nil {
-			return nil, fmt.Errorf("error loading .env file: %w", err)
+			log.Printf("Warning: .env not found, using environment variables and defaults")
 		}
 	}
 
@@ -55,8 +55,41 @@ func New() (*Config, error) {
 	if err := env.Parse(&cfg); err != nil {
 		return nil, fmt.Errorf("error parsing config: %w", err)
 	}
+	applyPostgresEnvFallbacks(&cfg.Database)
 
-	fmt.Printf("Database Config: %+v\n", cfg.Database)
+	fmt.Printf(
+		"Database Config: host=%s port=%s name=%s sslmode=%s auto_migrate=%t\n",
+		cfg.Database.Host,
+		cfg.Database.Port,
+		cfg.Database.Name,
+		cfg.Database.SSLMode,
+		cfg.Database.AutoMigrate,
+	)
 
 	return &cfg, nil
+}
+
+func applyPostgresEnvFallbacks(db *DatabaseConfig) {
+	if os.Getenv("DATABASE_HOST") == "" {
+		db.Host = envOrDefault("PGHOST", db.Host)
+	}
+	if os.Getenv("DATABASE_PORT") == "" {
+		db.Port = envOrDefault("PGPORT", db.Port)
+	}
+	if os.Getenv("DATABASE_USER") == "" {
+		db.User = envOrDefault("PGUSER", db.User)
+	}
+	if os.Getenv("DATABASE_PASSWORD") == "" {
+		db.Password = envOrDefault("PGPASSWORD", db.Password)
+	}
+	if os.Getenv("DATABASE_NAME") == "" {
+		db.Name = envOrDefault("PGDATABASE", db.Name)
+	}
+}
+
+func envOrDefault(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
 }

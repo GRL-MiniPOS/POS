@@ -1,0 +1,9 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "go build -o bin/server ."
+
+[deploy]
+startCommand = "./bin/server"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"

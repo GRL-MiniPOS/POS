@@ -1,0 +1,1646 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "完整的 POS 系統後端 API，包含商品管理、分類管理、庫存管理等功能",
+        "title": "POS System API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "support@pos.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8002",
+    "basePath": "/api",
+    "paths": {
+        "/health": {
+            "get": {
+                "description": "檢查服務和資料庫的健康狀態",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "健康檢查",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders": {
+            "post": {
+                "description": "建立手動訂單。若商品有 variants，items[].product_variant_id 必填；若商品無 variants，items[].product_variant_id 不可提供。product_variant_id 必須屬於 product_id。product 或 variant 下架時不可加入訂單。quantity=0 的商品/variant 仍可預購，不阻擋下單。\n\n有變體商品訂單範例：{\"source\":\"instagram\",\"payment\":\"bank_transfer\",\"items\":[{\"product_id\":\"...\",\"product_variant_id\":\"...\",\"quantity\":1}]}\n\n無變體商品訂單範例：{\"source\":\"facebook\",\"payment\":\"cash\",\"items\":[{\"product_id\":\"...\",\"quantity\":1}]}\n\n錯誤範例：商品有變體但未帶 product_variant_id 時，回傳 VALIDATION_ERROR，field 為 items[0].product_variant_id。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "新增訂單",
+                "parameters": [
+                    {
+                        "description": "訂單資訊",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.OrderCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.OrderCreateSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR / BUSINESS_RULE_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "PRODUCT_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_SERVER_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/product-categories": {
+            "get": {
+                "description": "取得所有商品分類，支援 active 和 parent_id 篩選",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "取得商品分類列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "true",
+                        "description": "是否只顯示啟用的分類 (true/false)",
+                        "name": "active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "父分類 ID；不傳回全部分類，空字串表示頂層分類，UUID 表示指定父分類下的子分類",
+                        "name": "parent_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CategoryListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "伺服器錯誤",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "新增一個新的商品分類。頂層分類請省略 parent_id 或傳 null；子分類請傳父分類 UUID；parent_id 不接受空字串。order 不傳時會自動排到同層最後。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "新增商品分類",
+                "parameters": [
+                    {
+                        "description": "分類資訊",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCategoryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCategorySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "參數錯誤或分類名稱已存在",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "伺服器錯誤",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/product-categories/{id}": {
+            "delete": {
+                "description": "刪除指定分類（會一併刪除子分類，商品轉為未分類）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "刪除商品分類",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "分類 ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.DeleteCategorySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "分類仍有庫存商品",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "分類不存在",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "伺服器錯誤",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/product-options": {
+            "get": {
+                "description": "取得所有商品使用過的自訂 option_groups 與 values（去重）。option_groups 是規格類型，例如「顏色」「尺寸」「款式」；variants 是實際可販售組合。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "取得所有商品選項",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ProductOptionListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_SERVER_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/products": {
+            "get": {
+                "description": "取得商品列表，支援搜尋、分類、規格值、價格、庫存狀態、上下架狀態篩選。預購商品 quantity=0 時 stock_status=out-of-stock，但 sale_status=active 仍 can_order=true。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "取得商品列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "頁碼",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每頁數量",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "商品名稱搜尋",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "分類 ID",
+                        "name": "categories[]",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "規格名稱或規格值搜尋，例如 白色、S、顏色",
+                        "name": "options[]",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "最低價格",
+                        "name": "priceMin",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "最高價格",
+                        "name": "priceMax",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "all",
+                        "description": "庫存狀態 (all/in-stock/out-of-stock)",
+                        "name": "stockStatus",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "all",
+                        "description": "上下架狀態 (all/active/inactive)",
+                        "name": "saleStatus",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ProductListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_SERVER_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "新增商品。最多兩層自訂規格；option_groups 為空代表無變體商品，使用商品層級 quantity。若有 option_groups，必須提供 variants，庫存由 variant.quantity 管理。quantity=0 僅代表無現貨，sale_status=active 時仍可預購。\n\n無變體範例：{\"name\":\"銀色項鍊\",\"category_id\":\"...\",\"price\":\"590\",\"quantity\":0,\"sale_status\":\"active\",\"option_groups\":[],\"variants\":[]}\n\n一層規格範例：{\"name\":\"托特包\",\"category_id\":\"...\",\"price\":\"1280\",\"option_groups\":[{\"name\":\"款式\",\"values\":[\"現貨\",\"預購\"]}],\"variants\":[{\"option_values\":{\"款式\":\"現貨\"},\"quantity\":3},{\"option_values\":{\"款式\":\"預購\"},\"quantity\":0}]}\n\n兩層規格範例：{\"name\":\"經典T恤\",\"category_id\":\"...\",\"price\":\"590\",\"option_groups\":[{\"name\":\"顏色\",\"values\":[\"白色\",\"黑色\"]},{\"name\":\"尺寸\",\"values\":[\"S\",\"M\"]}],\"variants\":[{\"option_values\":{\"顏色\":\"白色\",\"尺寸\":\"S\"},\"quantity\":0,\"sale_status\":\"active\"}]}",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "新增商品",
+                "parameters": [
+                    {
+                        "description": "商品資訊；無變體商品使用 quantity，有變體商品使用 variants[].quantity",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateProductRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateProductSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR / BUSINESS_RULE_ERROR / 圖片或分類不存在",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "CONFLICT：重複變體組合",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_SERVER_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/batch-delete": {
+            "post": {
+                "description": "批量刪除多個商品",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "批量刪除商品",
+                "parameters": [
+                    {
+                        "description": "商品 ID 陣列",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BatchDeleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.BatchDeleteProductSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR / SOME_PRODUCTS_IN_USE",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_SERVER_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/{id}": {
+            "get": {
+                "description": "取得商品完整資訊，包含分類、圖片、option_groups、variants、stock_status、sale_status、can_order。stock_status 只反映庫存；can_order 只反映是否可下單。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "取得單一商品",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "商品 ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ProductDetailSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "PRODUCT_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_SERVER_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "刪除指定商品（若有未完成訂單則無法刪除）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "刪除商品",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "商品 ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.DeleteProductSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR / PRODUCT_IN_USE",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "PRODUCT_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_SERVER_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "部分更新商品資訊。若帶 option_groups 或 variants，兩者必須一起提供，並會完整替換商品規格結構。無變體商品不可有 variants；有變體商品必須在訂單中指定 product_variant_id。\n\n更新為無變體範例：{\"quantity\":0,\"option_groups\":[],\"variants\":[]}\n\n更新兩層規格範例：{\"option_groups\":[{\"name\":\"顏色\",\"values\":[\"白色\"]},{\"name\":\"尺寸\",\"values\":[\"S\"]}],\"variants\":[{\"option_values\":{\"顏色\":\"白色\",\"尺寸\":\"S\"},\"quantity\":0,\"sale_status\":\"active\"}]}",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "更新商品",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "商品 ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "要更新的商品資訊",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateProductRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateProductSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_ERROR / BUSINESS_RULE_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "PRODUCT_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "CONFLICT：重複變體組合",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_SERVER_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/upload": {
+            "post": {
+                "description": "上傳一個或多個圖片檔案，支援 JPEG, PNG, GIF, WebP 格式，單檔最大 10MB",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "上傳圖片",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "圖片檔案（可多選）",
+                        "name": "files",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UploadAssetsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "檔案格式不支援或檔案過大",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "伺服器錯誤",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.AssetResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-05-07T10:00:00Z"
+                },
+                "height": {
+                    "type": "integer",
+                    "example": 1200
+                },
+                "id": {
+                    "type": "string",
+                    "example": "bdf73d34-54d4-4e3f-b47b-2fcbfc33a51f"
+                },
+                "mime": {
+                    "type": "string",
+                    "example": "image/jpeg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "product-a.jpg"
+                },
+                "size": {
+                    "type": "integer",
+                    "example": 523412
+                },
+                "thumb_url": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "url": {
+                    "type": "string",
+                    "example": "http://localhost:8002/assets/2026/05/product-a.jpg"
+                },
+                "width": {
+                    "type": "integer",
+                    "example": 1600
+                }
+            }
+        },
+        "dto.BatchDeleteProductResponse": {
+            "type": "object",
+            "properties": {
+                "deleted_count": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "message": {
+                    "type": "string",
+                    "example": "2 個商品已刪除"
+                }
+            }
+        },
+        "dto.BatchDeleteProductSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.BatchDeleteProductResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.BatchDeleteRequest": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "6d1fb22a-2eb3-4a8a-9750-b4d63b56b971"
+                    ]
+                }
+            }
+        },
+        "dto.CategoryListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CategoryResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "dto.CategoryResponse": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "2c619823-aa6b-4e7e-931f-c8358bb07861"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "上衣"
+                },
+                "order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "parent_id": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "example": "2c619823-aa6b-4e7e-931f-c8358bb07861"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "dto.CreateCategoryRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "上衣"
+                },
+                "order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "parent_id": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "example": "2c619823-aa6b-4e7e-931f-c8358bb07861"
+                }
+            }
+        },
+        "dto.CreateCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "分類新增成功"
+                }
+            }
+        },
+        "dto.CreateCategorySuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.CreateCategoryResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.CreateProductRequest": {
+            "type": "object",
+            "required": [
+                "category_id",
+                "name",
+                "price"
+            ],
+            "properties": {
+                "category_id": {
+                    "type": "string",
+                    "example": "2c619823-aa6b-4e7e-931f-c8358bb07861"
+                },
+                "image_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "經典白色T恤"
+                },
+                "option_groups": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductOptionGroupRequest"
+                    }
+                },
+                "price": {
+                    "type": "string",
+                    "example": "590"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 0
+                },
+                "sale_status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive"
+                    ],
+                    "example": "active"
+                },
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductVariantRequest"
+                    }
+                }
+            }
+        },
+        "dto.CreateProductResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "6d1fb22a-2eb3-4a8a-9750-b4d63b56b971"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "商品新增成功"
+                }
+            }
+        },
+        "dto.CreateProductSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.CreateProductResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.DeleteCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "分類刪除成功"
+                }
+            }
+        },
+        "dto.DeleteCategorySuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.DeleteCategoryResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.DeleteProductResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "商品刪除成功"
+                }
+            }
+        },
+        "dto.DeleteProductSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.DeleteProductResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.ErrorDetail": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "VALIDATION_ERROR"
+                },
+                "failed_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "6d1fb22a-2eb3-4a8a-9750-b4d63b56b971"
+                    ]
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ValidationFieldError"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "請求參數驗證失敗"
+                }
+            }
+        },
+        "dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/dto.ErrorDetail"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "dto.OrderCreateRequest": {
+            "type": "object",
+            "required": [
+                "items"
+            ],
+            "properties": {
+                "customer_id": {
+                    "type": "string",
+                    "example": "20a97d01-4c0b-4f52-84dd-7e5b36d22cc1"
+                },
+                "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/dto.OrderItemCreateRequest"
+                    }
+                },
+                "payment": {
+                    "type": "string",
+                    "example": "bank_transfer"
+                },
+                "source": {
+                    "type": "string",
+                    "example": "instagram"
+                }
+            }
+        },
+        "dto.OrderCreateSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.OrderResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.OrderItemCreateRequest": {
+            "type": "object",
+            "required": [
+                "product_id",
+                "quantity"
+            ],
+            "properties": {
+                "product_id": {
+                    "type": "string",
+                    "example": "6d1fb22a-2eb3-4a8a-9750-b4d63b56b971"
+                },
+                "product_variant_id": {
+                    "type": "string",
+                    "example": "9b0d5d3d-6e44-43ad-9952-d80f9204fd9f"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                }
+            }
+        },
+        "dto.OrderItemResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "fcb4f63c-bb91-45f2-9756-837bc2df0d68"
+                },
+                "product_id": {
+                    "type": "string",
+                    "example": "6d1fb22a-2eb3-4a8a-9750-b4d63b56b971"
+                },
+                "product_name": {
+                    "type": "string",
+                    "example": "經典白色T恤"
+                },
+                "product_variant_id": {
+                    "type": "string",
+                    "example": "9b0d5d3d-6e44-43ad-9952-d80f9204fd9f"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "subtotal": {
+                    "type": "integer",
+                    "example": 1180
+                },
+                "unit_price": {
+                    "type": "integer",
+                    "example": 590
+                },
+                "variant": {
+                    "$ref": "#/definitions/dto.ProductVariantResponse"
+                }
+            }
+        },
+        "dto.OrderResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-05-10T10:00:00Z"
+                },
+                "customer_id": {
+                    "type": "string",
+                    "example": "20a97d01-4c0b-4f52-84dd-7e5b36d22cc1"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "71852cd1-d5e6-43f2-8c63-3118ef0117bb"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.OrderItemResponse"
+                    }
+                },
+                "original_price": {
+                    "type": "integer",
+                    "example": 1180
+                },
+                "payment": {
+                    "type": "string",
+                    "example": "bank_transfer"
+                },
+                "source": {
+                    "type": "string",
+                    "example": "instagram"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "processing",
+                        "shipped",
+                        "completed",
+                        "cancelled"
+                    ],
+                    "example": "pending"
+                },
+                "total_price": {
+                    "type": "integer",
+                    "example": 1180
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-05-10T10:00:00Z"
+                }
+            }
+        },
+        "dto.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "current_page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "per_page": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total_items": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "dto.ProductCategoryInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "2c619823-aa6b-4e7e-931f-c8358bb07861"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "上衣"
+                }
+            }
+        },
+        "dto.ProductDetailResponse": {
+            "type": "object",
+            "properties": {
+                "can_order": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "category": {
+                    "$ref": "#/definitions/dto.ProductCategoryInfo"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-05-07T10:00:00Z"
+                },
+                "has_variants": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "id": {
+                    "type": "string",
+                    "example": "6d1fb22a-2eb3-4a8a-9750-b4d63b56b971"
+                },
+                "image": {
+                    "type": "string",
+                    "example": "http://localhost:8002/assets/2026/05/product-a.jpg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "經典白色T恤"
+                },
+                "option_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductOptionGroupResponse"
+                    }
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 590
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "sale_status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive"
+                    ],
+                    "example": "active"
+                },
+                "stock": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "stock_status": {
+                    "type": "string",
+                    "enum": [
+                        "in-stock",
+                        "out-of-stock"
+                    ],
+                    "example": "out-of-stock"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-05-07T10:00:00Z"
+                },
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductVariantResponse"
+                    }
+                }
+            }
+        },
+        "dto.ProductDetailSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.ProductDetailResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.ProductListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/dto.PaginationResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.ProductOptionGroupRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "values"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "example": "顏色"
+                },
+                "values": {
+                    "type": "array",
+                    "maxItems": 50,
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "白色",
+                        "黑色"
+                    ]
+                }
+            }
+        },
+        "dto.ProductOptionGroupResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "21a4c97a-8f60-4f50-9d37-13b8e43f39ce"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "顏色"
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "白色",
+                        "黑色"
+                    ]
+                }
+            }
+        },
+        "dto.ProductOptionListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductOptionGroupResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "dto.ProductResponse": {
+            "type": "object",
+            "properties": {
+                "can_order": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "category": {
+                    "$ref": "#/definitions/dto.ProductCategoryInfo"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-05-07T10:00:00Z"
+                },
+                "has_variants": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "id": {
+                    "type": "string",
+                    "example": "6d1fb22a-2eb3-4a8a-9750-b4d63b56b971"
+                },
+                "image": {
+                    "type": "string",
+                    "example": "http://localhost:8002/assets/2026/05/product-a.jpg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "經典白色T恤"
+                },
+                "option_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductOptionGroupResponse"
+                    }
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 590
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "sale_status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive"
+                    ],
+                    "example": "active"
+                },
+                "stock": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "stock_status": {
+                    "type": "string",
+                    "enum": [
+                        "in-stock",
+                        "out-of-stock"
+                    ],
+                    "example": "out-of-stock"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-05-07T10:00:00Z"
+                },
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductVariantResponse"
+                    }
+                }
+            }
+        },
+        "dto.ProductVariantRequest": {
+            "type": "object",
+            "required": [
+                "option_values"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "9b0d5d3d-6e44-43ad-9952-d80f9204fd9f"
+                },
+                "option_values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "尺寸": "S",
+                        "顏色": "白色"
+                    }
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 0
+                },
+                "sale_status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive"
+                    ],
+                    "example": "active"
+                }
+            }
+        },
+        "dto.ProductVariantResponse": {
+            "type": "object",
+            "properties": {
+                "can_order": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "id": {
+                    "type": "string",
+                    "example": "9b0d5d3d-6e44-43ad-9952-d80f9204fd9f"
+                },
+                "option_values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "尺寸": "S",
+                        "顏色": "白色"
+                    }
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "sale_status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive"
+                    ],
+                    "example": "active"
+                },
+                "stock_status": {
+                    "type": "string",
+                    "enum": [
+                        "in-stock",
+                        "out-of-stock"
+                    ],
+                    "example": "out-of-stock"
+                }
+            }
+        },
+        "dto.UpdateProductRequest": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string",
+                    "example": "2c619823-aa6b-4e7e-931f-c8358bb07861"
+                },
+                "image_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "經典黑色T恤"
+                },
+                "option_groups": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductOptionGroupRequest"
+                    }
+                },
+                "price": {
+                    "type": "string",
+                    "example": "690"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 0
+                },
+                "sale_status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive"
+                    ],
+                    "example": "active"
+                },
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProductVariantRequest"
+                    }
+                }
+            }
+        },
+        "dto.UpdateProductResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "6d1fb22a-2eb3-4a8a-9750-b4d63b56b971"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "商品更新成功"
+                }
+            }
+        },
+        "dto.UpdateProductSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.UpdateProductResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.UploadAssetsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AssetResponse"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "dto.ValidationFieldError": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string",
+                    "example": "image_ids[0]"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "必須是合法 UUID"
+                }
+            }
+        },
+        "handler.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "db_status": {
+                    "type": "string",
+                    "example": "up"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2025-01-04T10:00:00Z"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

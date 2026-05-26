@@ -5,7 +5,9 @@ description: Generate Conventional Commits message based on staged changes (Chin
 
 ## Task
 
-Analyze staged Git changes and generate commit messages. Do **not** execute `git commit`, `git add`, or any other mutating command under any circumstances — only output the message for the user to copy.
+Analyze staged Git changes and generate commit messages. Do **not** execute
+`git commit`, `git add`, or any other mutating command under any
+circumstances. Only output the message for the user to copy.
 
 ## Git Status
 
@@ -15,13 +17,15 @@ Analyze staged Git changes and generate commit messages. Do **not** execute `git
 
 !git diff --cached
 
-## Unstaged Changes (for reference only — do not base commit message on these)
+## Unstaged Changes (for reference only - do not base commit message on these)
 
 !git diff
 
+---
+
 ## Commit Message Format
 
-Use Conventional Commits specification:
+Use the Conventional Commits specification:
 
 ```text
 <type>[(<scope>)][!]: <subject>
@@ -38,65 +42,97 @@ Use Conventional Commits specification:
 | `feat`     | New feature or API                           | MINOR  |
 | `fix`      | Bug fix or error handling                    | PATCH  |
 | `perf`     | Performance improvement (no behavior change) | PATCH  |
-| `refactor` | Code restructuring (not feat / fix)          | —      |
-| `style`    | Formatting, whitespace, linting              | —      |
-| `docs`     | Documentation or comments only               | —      |
-| `test`     | Adding or modifying tests                    | —      |
-| `build`    | Build system or dependency changes           | —      |
-| `ci`       | CI/CD configuration changes                  | —      |
-| `chore`    | Other maintenance not affecting src/test     | —      |
-| `revert`   | Reverting a previous commit                  | —      |
+| `refactor` | Code restructuring (not feat / fix)          | -      |
+| `style`    | Formatting, whitespace, linting              | -      |
+| `docs`     | Documentation or comments only               | -      |
+| `test`     | Adding or modifying tests                    | -      |
+| `build`    | Build system or dependency changes           | -      |
+| `ci`       | CI/CD configuration changes                  | -      |
+| `chore`    | Other maintenance not affecting src/test     | -      |
+| `revert`   | Reverting a previous commit                  | -      |
 
 ### Scope
 
-Infer from file paths or functional modules, e.g.: `auth`, `api`, `ui`, `components`, `utils`, `router`
+Infer the scope from file paths or functional modules, for example:
+`auth`, `api`, `ui`, `views`, `components`, `stores`, `router`, `survey`,
+`utils`, `docs`.
+
+Prefer the smallest meaningful scope. If one clear scope cannot be inferred,
+omit the scope instead of inventing one.
 
 ### Breaking Change
 
-Add `!` after type/scope; add `BREAKING CHANGE:` in footer:
+Add `!` after type/scope and add `BREAKING CHANGE:` in the footer:
 
 ```text
-feat(button)!: remove size prop, use class instead
+feat(button)!: remove size prop
 
-BREAKING CHANGE: `size` prop has been removed. Use Tailwind classes directly via `class` attribute.
+BREAKING CHANGE: `size` prop has been removed. Use CSS classes via `class`.
 ```
 
 ### Writing Guidelines
 
-- **Header** (`type(scope): subject`): ≤ 72 characters (ideally ≤ 50), no period at end
-- **subject**: Imperative mood — EN: lowercase start / ZH: 繁體中文，25 字以內
-- **body**: Explain **why**, not what. Bullet points for multi-item changes. Each line ≤ 72 characters
-- **footer**: Issue refs (`Closes #123`, `Refs #456`) or `BREAKING CHANGE:`
+- **Header** (`type(scope): subject`): <= 72 characters, ideally <= 50;
+  no period at the end
+- **subject**: imperative mood; EN starts lowercase; ZH uses Traditional
+  Chinese and stays within 25 characters when possible
+- **body**: one terse bullet per concern — state the outcome or reason
+  in ≤ 50 characters; omit detail that is obvious from the diff
+- Use bullet points for multi-item bodies; keep total bullets ≤ 5
+- Keep each body/footer line **<= 72 characters** — do not wrap;
+  shorten or split bullets instead
+- **footer**: issue refs (`Closes #123`, `Refs #456`) or
+  `BREAKING CHANGE:`
 
 ---
 
 ## Execution Steps
 
 1. **Check staged changes**
-   - If nothing staged → ask the user to stage the intended files first; do not proceed
-   - If changes exist but nothing staged → list the relevant unstaged paths and ask the user to stage them first; do not stage files yourself
+   - If nothing is staged, ask the user to stage the intended files first;
+     do not proceed to generate a commit message
+   - If there are unstaged changes but nothing staged, list the relevant
+     unstaged paths and ask the user to stage them first
+   - Never stage files yourself
 
 2. **Use this file as the source of truth**
-   - Follow the Conventional Commits rules below even if previous commits used a different format
+   - Follow these Conventional Commits rules even if previous commits used a
+     different format
+   - Do not rely on recent commit style if it conflicts with this file
 
-3. **Analyze staged diff** → determine type, infer scope, draft subject and body
+3. **Analyze staged diff**
+   - Determine the best type
+   - Infer the narrowest useful scope
+   - Draft a concise subject
+   - Add a body only when type + scope + subject do not convey full intent
+   - Omit body if the change is self-evident (e.g., `fix(btn): add disabled state`)
+   - Keep bullets ≤ 5; prefer fewer, shorter bullets over many detailed ones
 
-4. **Handle multiple unrelated changes** — if staged changes span unrelated concerns, output a concrete split plan **before** the commit messages:
-   ```
-   建議拆分為：
-   1. paths:
-      - apps/frontend/src/app/components/atoms/button/button.tsx
-      suggested message: feat(button): add loading state
+4. **Handle multiple unrelated changes**
+   - If staged changes span unrelated concerns, output a concrete split plan
+     **before** the commit messages
+   - The split plan must list paths and suggested messages only; do not
+     include `git add`, `git commit`, or other mutating commands
+   - Still output a combined message as a fallback
 
-   2. paths:
-      - apps/frontend/docs/button.md
-      suggested message: docs(button): document loading prop
-   ```
-   Then still output a combined message as fallback.
+```text
+建議拆分為：
+1. paths:
+   - src/services/surveyApi.ts
+   - src/types/survey.ts
+   suggested message: fix(api): handle survey submission errors
+
+2. paths:
+   - src/views/survey/SurveyEditor.vue
+   - src/components/survey/QuestionList.vue
+   suggested message: refactor(survey): simplify question editing flow
+```
 
 ---
 
 ## Output Format
+
+Output both versions directly. Do not ask for confirmation.
 
 📝 **繁體中文版本 (Traditional Chinese)**
 
@@ -118,6 +154,8 @@ BREAKING CHANGE: `size` prop has been removed. Use Tailwind classes directly via
 <footer>
 ```
 
+If no body or footer is needed, omit that section cleanly.
+
 ---
 
 ## Examples
@@ -127,11 +165,11 @@ BREAKING CHANGE: `size` prop has been removed. Use Tailwind classes directly via
 📝 **繁體中文版本**
 
 ```text
-feat(auth): 新增第三方 OAuth 登入功能
+feat(auth): 新增第三方 OAuth 登入
 
-- 實作 Google / GitHub OAuth 登入流程
-- 新增 token 刷新機制
-- 將登入狀態同步至 store
+- 支援 Google / GitHub OAuth 登入流程
+- 讓登入狀態能在重新整理後保留
+- 降低手動管理 token 的風險
 ```
 
 📝 **English Version**
@@ -139,36 +177,73 @@ feat(auth): 新增第三方 OAuth 登入功能
 ```text
 feat(auth): add third-party OAuth login
 
-- Implement Google / GitHub OAuth login flow
-- Add token refresh mechanism
-- Sync login state to store
+- Support Google / GitHub OAuth login flow
+- Preserve login state after page refresh
+- Reduce the risk of manual token handling
 ```
 
-### Mixed changes → split plan
+### Documentation-only commit
+
+📝 **繁體中文版本**
+
+```text
+docs(commands): 更新提交訊息指引
+
+- 收斂可執行的 Git 指令範圍
+- 明確要求只根據 staged diff 產生訊息
+```
+
+📝 **English Version**
+
+```text
+docs(commands): update commit message guide
+
+- Narrow the allowed Git command surface
+- Require messages to be based on staged diffs only
+```
+
+### Simple fix — no body needed
+
+📝 **繁體中文版本**
+
+```text
+fix(form): 修正 email 欄位送出前未驗證
+```
+
+📝 **English Version**
+
+```text
+fix(form): validate email before submission
+```
+
+### Mixed changes - split plan
 
 > ⚠️ Staged changes contain unrelated modifications. Suggested split:
 >
-> ```
+> ```text
 > 1. paths:
->    - apps/frontend/src/app/lib/api.ts
->    - apps/frontend/src/app/types/product.ts
->    suggested message: fix(api): handle product submission errors
+>    - src/services/surveyApi.ts
+>    - src/types/survey.ts
+>    suggested message: fix(api): handle survey submission errors
 >
 > 2. paths:
->    - apps/frontend/src/app/components/molecules/inventoryList/inventoryTableContent.tsx
->    - apps/frontend/src/app/components/atoms/button/button.tsx
->    suggested message: style(ui): adjust inventory table actions
+>    - docs/survey.md
+>    - .claude/commands/commit-message.md
+>    suggested message: docs(survey): update survey workflow docs
 > ```
 
-(Combined fallback message follows below)
+(Combined fallback message follows below.)
 
 ---
 
 ## Rules
 
-- Output both versions directly — do not ask for confirmation
-- **Never execute `git commit`** — only generate the message text
+- Output both Traditional Chinese and English versions
+- Do not ask for confirmation before outputting the messages
+- **Never execute `git commit`**
 - **Never execute mutating Git commands** such as `git add`, `git commit`, `git reset`, or `git checkout`
-- Ensure both versions carry consistent meaning
 - Accurately reflect staged changes only
+- Use unstaged changes only to explain why no message can be generated when nothing is staged
+- Ensure both language versions carry consistent meaning
 - If changes should be split, output the split plan **before** the commit messages
+- Avoid examples or assumptions from projects outside the current `.claude` context

@@ -1,5 +1,10 @@
 ---
-paths: ['**/*.md', 'apps/frontend/src/**/*.ts', 'apps/frontend/src/**/*.tsx']
+paths:
+  [
+    'apps/frontend/src/**/*.ts',
+    'apps/frontend/src/**/*.tsx',
+    'apps/frontend/**/*.md',
+  ]
 ---
 
 # 協作與溝通 / Collaboration & Communication (準則 29-31)
@@ -63,6 +68,8 @@ console.log(user.created_at.toLocaleDateString())
 
 問題是呼叫端不知道 `created_at` 是字串、`Date`、`null`，也不知道失敗時 response 長什麼樣子。
 
+> **後端 schema 命名約定**：本專案後端 Swagger schema 以 `dto.XxxRequest` / `dto.XxxResponse` 命名（Go 套件前綴，見 `apps/backend/docs/swagger.yaml`），欄位一律 snake_case。前端 adapter 把 `dto.` namespace 移除（如 `dto.CategoryResponse` → `CategoryResponse`），欄位轉 camelCase；`*Response` 型別僅用於 adapter 邊界，不外流到 component。
+
 **推薦 - 在 API adapter 定義契約與轉換**:
 
 ```typescript
@@ -104,10 +111,15 @@ export async function getUser(id: string): Promise<User> {
 **推薦 - 明確表示 API 錯誤格式**:
 
 ```typescript
+// 對應後端 dto.ErrorResponse（見 apps/backend/docs/swagger.yaml）
 interface ApiErrorResponse {
-  code: string
-  message: string
-  fieldErrors?: Record<string, string[]>
+  success: false
+  error: {
+    code: string                                          // 如 'VALIDATION_ERROR'、'PRODUCT_NOT_FOUND'
+    message: string
+    fields?: Array<{ field: string; message: string }>    // 對應 dto.ValidationFieldError
+    failed_ids?: string[]                                 // batch 操作部分失敗時回傳
+  }
 }
 
 export class ApiError extends Error {
@@ -115,10 +127,16 @@ export class ApiError extends Error {
     readonly status: number,
     readonly body: ApiErrorResponse
   ) {
-    super(body.message)
+    super(body.error.message)
   }
 }
 ```
+
+`body.error.fields` 是 validation error 用、`body.error.failed_ids` 是 batch 操作（如 `DELETE /products/batch-delete`）部分失敗用；兩者不會同時出現。錯誤分流請以 `body.error.code` 為主、HTTP status 為輔，詳見 [05-state-error-handling.md](05-state-error-handling.md) 準則 27。
+
+**推薦 - multipart endpoint 不要手動設 Content-Type**:
+
+後端目前只有 `POST /upload` 使用 `multipart/form-data`（欄位 `files`，多檔上傳）。這類 endpoint 在 adapter 直接把 `FormData` 傳給 `fetch` 的 `body`，**不要自行設 `Content-Type` header**，要讓瀏覽器補上正確的 multipart boundary。
 
 ### 常見陷阱 / Common Pitfalls
 

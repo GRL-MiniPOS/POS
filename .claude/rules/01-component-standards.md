@@ -3,7 +3,6 @@ paths:
   [
     'apps/frontend/src/**/*.tsx',
     'apps/frontend/src/**/*.ts',
-    'apps/frontend/src/app/hooks/**/*.ts',
   ]
 ---
 

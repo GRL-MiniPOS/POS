@@ -3,8 +3,6 @@ paths:
   [
     'apps/frontend/src/**/*.tsx',
     'apps/frontend/src/**/*.ts',
-    'apps/frontend/package.json',
-    'apps/frontend/next.config.ts',
   ]
 ---
 
@@ -341,15 +339,63 @@ function ContactForm() {
 
 **推薦 ✅ - 集中轉換 API error code，不硬綁不存在的語系目錄**:
 
+> **後端錯誤契約現況**：現行後端 validation error 走 HTTP **400 + `body.error.code === 'VALIDATION_ERROR'` + `body.error.fields[]`**，**沒有**使用 Unprocessable Entity（見 `apps/backend/docs/swagger.yaml` 中 `dto.ErrorResponse` 與各 operation responses）。前端 validation branch 不要靠獨立 HTTP status 判斷；先從 `ApiError.payload` narrow 出 `dto.ErrorResponse`，再以 `body.error.code` 為主、HTTP status 為輔。
+
+```typescript
+interface ApiErrorResponse {
+  success: false
+  error: {
+    code: string
+    message: string
+    fields?: Array<{ field: string; message: string }>
+    failed_ids?: string[]
+  }
+}
+
+function isApiErrorResponse(payload: unknown): payload is ApiErrorResponse {
+  if (typeof payload !== 'object' || payload === null || !('error' in payload)) {
+    return false
+  }
+
+  const body = payload as { success?: unknown; error?: unknown }
+  if (body.success !== false) {
+    return false
+  }
+
+  const error = body.error
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
+
+  const detail = error as { code?: unknown; message?: unknown }
+  return typeof detail.code === 'string' && typeof detail.message === 'string'
+}
+
+if (error instanceof ApiError) {
+  if (error.status === 401) {
+    // 未登入流程
+  } else if (isApiErrorResponse(error.payload)) {
+    const body = error.payload
+    if (body.error.code === 'VALIDATION_ERROR') {
+      // 取 body.error.fields 顯示欄位級錯誤
+    } else {
+      toast.error(getUserMessageFromApiErrorCode(body.error.code))
+    }
+  } else {
+    toast.error('操作失敗，請稍後再試')
+  }
+}
+```
+
 ```typescript
 const ERROR_MESSAGE_BY_CODE: Record<string, string> = {
-  VALIDATION_FAILED: '資料格式不正確，請檢查後再送出',
+  VALIDATION_ERROR: '資料格式不正確，請檢查後再送出',
   PERMISSION_DENIED: '您沒有權限執行此操作',
   RATE_LIMITED: '操作太頻繁，請稍後再試',
 }
 
-export function getUserMessageFromApiError(error: ApiError): string {
-  return ERROR_MESSAGE_BY_CODE[error.code] ?? '操作失敗，請稍後再試'
+export function getUserMessageFromApiErrorCode(code: string): string {
+  return ERROR_MESSAGE_BY_CODE[code] ?? '操作失敗，請稍後再試'
 }
 ```
 

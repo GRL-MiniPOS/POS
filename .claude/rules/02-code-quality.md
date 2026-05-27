@@ -3,9 +3,6 @@ paths:
   [
     'apps/frontend/src/**/*.tsx',
     'apps/frontend/src/**/*.ts',
-    'apps/frontend/src/app/hooks/**/*.ts',
-    'apps/frontend/src/app/lib/**/*.ts',
-    'apps/frontend/src/app/types/**/*.ts',
     'apps/backend/**/*.go',
     'apps/backend/internal/storage/sql/migration/scripts/**/*.sql',
   ]

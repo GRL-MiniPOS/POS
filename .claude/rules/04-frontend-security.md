@@ -313,6 +313,11 @@ if (!isProfileInput(parsed)) {
 
 Do not put secrets, passwords, API keys, refresh tokens, or non-public data in the client bundle, browser-readable storage, URLs, logs, or mock data. `NEXT_PUBLIC_*` variables are shipped to the browser and must be treated as public. Auth tokens should be set by the backend as `HttpOnly; Secure; SameSite` cookies, and the frontend should access secret-backed services through same-origin APIs or controlled proxies.
 
+> **現狀（2026-Q2）**：後端 Swagger 在 `securityDefinitions` 已宣告 `BearerAuth`，但目前所有 operation **皆未套用 `security:` requirement**（見 `apps/backend/docs/swagger.yaml`），spec 上所有 endpoint 不需驗證。在 auth 流程與後端 security requirement 完整套用前：
+>
+> - 前端不要在個別 API function 自行加 `Authorization` header；auth 策略未定，集中放在共用 `apiRequest` wrapper，個別 hook 不處理 token。
+> - 一旦後端套用 security requirement 或前端引入 auth 流程，請更新或移除本註記。
+
 ### 為什麼重要 / Why This Matters
 
 - **XSS 放大效應**：`localStorage` 和 `sessionStorage` 可被成功執行的前端腳本讀取。

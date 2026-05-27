@@ -1,5 +1,11 @@
 ---
-paths: ['**/*.tsx', '**/*.ts', '**/next.config.ts', '**/package.json']
+paths:
+  [
+    'apps/frontend/src/**/*.tsx',
+    'apps/frontend/src/**/*.ts',
+    'apps/frontend/next.config.ts',
+    'apps/frontend/package.json',
+  ]
 ---
 
 # 前端效能 / Frontend Performance (準則 14-20)

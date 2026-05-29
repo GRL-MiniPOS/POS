@@ -24,7 +24,7 @@ definitions:
         type: string
         x-nullable: true
       url:
-        example: http://localhost:8002/assets/2026/05/product-a.jpg
+        example: https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg
         type: string
       width:
         example: 1600
@@ -394,7 +394,7 @@ definitions:
         example: 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
         type: string
       image:
-        example: http://localhost:8002/assets/2026/05/product-a.jpg
+        example: https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg
         type: string
       name:
         example: 經典白色T恤
@@ -521,7 +521,7 @@ definitions:
         example: 6d1fb22a-2eb3-4a8a-9750-b4d63b56b971
         type: string
       image:
-        example: http://localhost:8002/assets/2026/05/product-a.jpg
+        example: https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg
         type: string
       name:
         example: 經典白色T恤
@@ -706,7 +706,7 @@ definitions:
         example: 1.0.0
         type: string
     type: object
-host: localhost:8002
+host: pos-backend-production-2ccc.up.railway.app
 info:
   contact:
     email: support@pos.com
@@ -1151,7 +1151,6 @@ paths:
       tags:
       - Upload
 schemes:
-- http
 - https
 securityDefinitions:
   BearerAuth:

@@ -675,7 +675,7 @@ const docTemplate = `{
                 },
                 "url": {
                     "type": "string",
-                    "example": "http://localhost:8002/assets/2026/05/product-a.jpg"
+                    "example": "https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg"
                 },
                 "width": {
                     "type": "integer",
@@ -1199,7 +1199,7 @@ const docTemplate = `{
                 },
                 "image": {
                     "type": "string",
-                    "example": "http://localhost:8002/assets/2026/05/product-a.jpg"
+                    "example": "https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg"
                 },
                 "name": {
                     "type": "string",
@@ -1378,7 +1378,7 @@ const docTemplate = `{
                 },
                 "image": {
                     "type": "string",
-                    "example": "http://localhost:8002/assets/2026/05/product-a.jpg"
+                    "example": "https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg"
                 },
                 "name": {
                     "type": "string",
@@ -1650,9 +1650,9 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8002",
+	Host:             "pos-backend-production-2ccc.up.railway.app",
 	BasePath:         "/api",
-	Schemes:          []string{"http", "https"},
+	Schemes:          []string{"https"},
 	Title:            "POS System API",
 	Description:      "完整的 POS 系統後端 API，包含商品管理、分類管理、庫存管理等功能",
 	InfoInstanceName: "swagger",

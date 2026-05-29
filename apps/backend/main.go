@@ -16,10 +16,10 @@ import (
 // @license.name  MIT
 // @license.url   https://opensource.org/licenses/MIT
 
-// @host      localhost:8002
+// @host      pos-backend-production-2ccc.up.railway.app
 // @BasePath  /api
 
-// @schemes http https
+// @schemes https
 
 // @securityDefinitions.apikey BearerAuth
 // @in header

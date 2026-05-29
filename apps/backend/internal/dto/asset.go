@@ -10,7 +10,7 @@ type AssetResponse struct {
 	Size      int64   `json:"size" example:"523412"`
 	Width     int     `json:"width" example:"1600"`
 	Height    int     `json:"height" example:"1200"`
-	URL       string  `json:"url" example:"http://localhost:8002/assets/2026/05/product-a.jpg"`
+	URL       string  `json:"url" example:"https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg"`
 	ThumbURL  *string `json:"thumb_url" extensions:"x-nullable"`
 	CreatedAt string  `json:"created_at" example:"2026-05-07T10:00:00Z"`
 }

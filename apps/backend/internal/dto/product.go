@@ -111,7 +111,7 @@ type ProductImageResponse struct {
 	Size         int64   `json:"size" example:"523412"`
 	Width        int     `json:"width" example:"1600"`
 	Height       int     `json:"height" example:"1200"`
-	URL          string  `json:"url" example:"http://localhost:8002/assets/2026/05/product-a.jpg"`
+	URL          string  `json:"url" example:"https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg"`
 	ThumbURL     *string `json:"thumb_url" extensions:"x-nullable"`
 	DisplayOrder int     `json:"display_order" example:"0"`
 	CreatedAt    string  `json:"created_at" example:"2026-05-07T10:00:00Z"`
@@ -131,7 +131,7 @@ type ProductResponse struct {
 	HasVariants  bool                         `json:"has_variants" example:"true"`
 	OptionGroups []ProductOptionGroupResponse `json:"option_groups"`
 	Variants     []ProductVariantResponse     `json:"variants"`
-	Image        string                       `json:"image" example:"http://localhost:8002/assets/2026/05/product-a.jpg"`
+	Image        string                       `json:"image" example:"https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg"`
 	CreatedAt    string                       `json:"created_at" example:"2026-05-07T10:00:00Z"`
 	UpdatedAt    string                       `json:"updated_at" example:"2026-05-07T10:00:00Z"`
 }

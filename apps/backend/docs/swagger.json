@@ -1,6 +1,5 @@
 {
     "schemes": [
-        "http",
         "https"
     ],
     "swagger": "2.0",
@@ -18,7 +17,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8002",
+    "host": "pos-backend-production-2ccc.up.railway.app",
     "basePath": "/api",
     "paths": {
         "/health": {
@@ -673,7 +672,7 @@
                 },
                 "url": {
                     "type": "string",
-                    "example": "http://localhost:8002/assets/2026/05/product-a.jpg"
+                    "example": "https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg"
                 },
                 "width": {
                     "type": "integer",
@@ -1197,7 +1196,7 @@
                 },
                 "image": {
                     "type": "string",
-                    "example": "http://localhost:8002/assets/2026/05/product-a.jpg"
+                    "example": "https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg"
                 },
                 "name": {
                     "type": "string",
@@ -1376,7 +1375,7 @@
                 },
                 "image": {
                     "type": "string",
-                    "example": "http://localhost:8002/assets/2026/05/product-a.jpg"
+                    "example": "https://pos-backend-production-2ccc.up.railway.app/assets/2026/05/product-a.jpg"
                 },
                 "name": {
                     "type": "string",

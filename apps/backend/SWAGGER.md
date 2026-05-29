@@ -100,7 +100,7 @@ Files: product-image.jpg
     {
       "id": "bdf73d34-54d4-4e3f-b47b-2fcbfc33a51f",
       "name": "product-image.jpg",
-      "url": "http://localhost:8002/assets/2025/01/...",
+      "url": "https://pos-backend-production-2ccc.up.railway.app/assets/2025/01/...",
       ...
     }
   ]

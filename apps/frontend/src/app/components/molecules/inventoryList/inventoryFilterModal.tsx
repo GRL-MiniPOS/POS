@@ -20,6 +20,7 @@ import {
   SpecificationFilterSection,
   PriceRangeSection,
   StockStatusSection,
+  SaleStatusSection,
 } from './filterModalSections'
 
 // Empty filter state for reset
@@ -29,8 +30,7 @@ const emptyFilters: IFilterState = {
   priceMin: null,
   priceMax: null,
   stockStatus: 'all',
-  dateFrom: null,
-  dateTo: null,
+  saleStatus: 'all',
 }
 
 export function InventoryFilterModal({
@@ -49,20 +49,24 @@ export function InventoryFilterModal({
     }
   }, [open, filters])
 
-  // Toggle category selection
-  const toggleCategory = (category: string) => {
-    const newCategories = tempFilters.categories.includes(category)
-      ? tempFilters.categories.filter((c) => c !== category)
-      : [...tempFilters.categories, category]
-    setTempFilters((prev) => ({ ...prev, categories: newCategories }))
+  // Toggle category selection (by id)
+  const toggleCategory = (id: string) => {
+    setTempFilters((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(id)
+        ? prev.categories.filter((c) => c !== id)
+        : [...prev.categories, id],
+    }))
   }
 
-  // Toggle specification selection
-  const toggleSpecification = (spec: string) => {
-    const newSpecs = tempFilters.specifications.includes(spec)
-      ? tempFilters.specifications.filter((s) => s !== spec)
-      : [...tempFilters.specifications, spec]
-    setTempFilters((prev) => ({ ...prev, specifications: newSpecs }))
+  // Toggle specification selection (by value)
+  const toggleSpecification = (value: string) => {
+    setTempFilters((prev) => ({
+      ...prev,
+      specifications: prev.specifications.includes(value)
+        ? prev.specifications.filter((s) => s !== value)
+        : [...prev.specifications, value],
+    }))
   }
 
   // Apply button: commit tempFilters to parent
@@ -115,6 +119,12 @@ export function InventoryFilterModal({
               value={tempFilters.stockStatus}
               onChange={(value) =>
                 setTempFilters((prev) => ({ ...prev, stockStatus: value }))
+              }
+            />
+            <SaleStatusSection
+              value={tempFilters.saleStatus}
+              onChange={(value) =>
+                setTempFilters((prev) => ({ ...prev, saleStatus: value }))
               }
             />
           </div>

@@ -16,7 +16,7 @@ interface IStockManageListItemProps {
   size?: 'small' | 'medium' | 'large'
   className?: string
   onCheck: (checked: boolean) => void
-  onEdit: () => void
+  onEdit?: () => void
   onDelete: () => void
 }
 
@@ -57,13 +57,20 @@ export const StockManageListItem = memo(function StockManageListItem({
           className="flex items-center justify-center"
           style={{ width: imgSize, height: imgSize }}
         >
-          <Image
-            src={imageUrl}
-            alt={name}
-            width={imgSize}
-            height={imgSize}
-            className="object-cover rounded-lg"
-          />
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={name}
+              width={imgSize}
+              height={imgSize}
+              className="object-cover rounded-lg"
+            />
+          ) : (
+            <div
+              className="w-full h-full rounded-lg bg-muted"
+              aria-label={`${name} 無圖片`}
+            />
+          )}
         </div>
         <div className="flex-1 px-4">{name}</div>
       </div>
@@ -79,7 +86,7 @@ export const StockManageListItem = memo(function StockManageListItem({
         {totalStock === 0 ? '缺貨' : `${totalStock} 件`}
       </div>
       <div className="w-32 ml-auto flex items-center space-x-4 px-6">
-        <Edit onClick={onEdit} />
+        {onEdit && <Edit onClick={onEdit} />}
         <Delete onClick={onDelete} />
       </div>
     </div>

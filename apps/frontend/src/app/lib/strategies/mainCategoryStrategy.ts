@@ -2,97 +2,67 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import type { IDndItem, ICategoryStrategy } from '@/app/types/dragAndDrop'
 import { arrayMove } from '@dnd-kit/sortable'
 
+// onAdd / onDelete 由呼叫端注入並自行處理錯誤（toast），不會 reject；
+// strategy 只負責確認流程、找不到資料的防呆與本地拖曳排序。
+export interface MainCategoryCallbacks {
+  onClick: (id: string) => void
+  onAdd: (name: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+  onReorder: (items: IDndItem[]) => void
+  onBeforeDelete?: (id: string, name: string) => Promise<boolean>
+  onError?: (message: string) => void
+}
+
 export class MainCategoryStrategy implements ICategoryStrategy {
-  type = 'main' as const // 分類斷言
+  type = 'main' as const
 
-  // 儲存數據
+  // 唯讀顯示資料，來源是 React Query 結果（已映射成 IDndItem 並依 order 排序）。
   private items: IDndItem[]
-  private setMainCategories: (
-    items: IDndItem[] | ((currentItems: IDndItem[]) => IDndItem[])
-  ) => void
-  private onMainCategoryClick: (id: string) => void
-  private onBeforeDelete?: (id: string, name: string) => Promise<boolean>
-  private onError?: (message: string) => void
+  private callbacks: MainCategoryCallbacks
 
-  constructor(
-    items: IDndItem[],
-    setMainCategories: (
-      items: IDndItem[] | ((currentItems: IDndItem[]) => IDndItem[])
-    ) => void,
-    callback: {
-      onClick: (id: string) => void
-      onBeforeDelete?: (id: string, name: string) => Promise<boolean>
-      onError?: (message: string) => void
-    }
-  ) {
+  constructor(items: IDndItem[], callbacks: MainCategoryCallbacks) {
     this.items = items
-    this.setMainCategories = setMainCategories
-    this.onMainCategoryClick = callback.onClick
-    this.onBeforeDelete = callback.onBeforeDelete
-    this.onError = callback.onError
-  }
-
-  private updateItems = (
-    updater: IDndItem[] | ((currentItems: IDndItem[]) => IDndItem[])
-  ) => {
-    this.setMainCategories(updater)
+    this.callbacks = callbacks
   }
 
   // 獲取主分類列表
   getItems = () => this.items
 
-  // 添加主分類
-  handleAdd = (name: string) => {
-    const newItem: IDndItem = {
-      id: Date.now().toString(),
-      name,
-    }
-    this.updateItems([...this.items, newItem])
-  }
-
-  // 刪除主分類
-  handleDelete = async (id: string) => {
-    try {
-      if (this.onBeforeDelete) {
-        const category = this.items.find((item) => item.id === id)
-
-        if (!category) {
-          console.error('[MainCategoryStrategy] 找不到該分類:', id)
-          this.onError?.('找不到該分類，無法刪除') // 通知 UI 層顯示錯誤
-          return
-        }
-
-        const confirmed = await this.onBeforeDelete(id, category.name)
-        if (!confirmed) {
-          return // 用戶取消刪除
-        }
-      }
-      // 调用API刪除主分類
-      console.log(`删除主分類 ${id} 及其所有子分類`)
-      this.updateItems(this.items.filter((item) => item.id !== id))
-    } catch (error) {
-      console.error('删除主分類失敗:', error)
-      this.onError?.('刪除分類失敗，請稍後再試')
-    }
+  // 新增主分類（頂層，parent_id 由呼叫端帶 null）
+  handleAdd = async (name: string) => {
+    await this.callbacks.onAdd(name)
   }
 
   // 點擊主分類
   handleClick = (id: string) => {
-    this.onMainCategoryClick?.(id)
+    this.callbacks.onClick(id)
   }
 
-  // 拖拽結束
-  handleDragEnd = (event: DragEndEvent) => {
-    // active: 被拖拽的項目, over: 拖拽到的位置
-    const { active, over } = event
-    // 如果位置有變化，則更新列表
-    if (active.id !== over?.id) {
-      this.updateItems((items: IDndItem[]) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id)
-        const newIndex = items.findIndex((item) => item.id === over?.id)
-
-        return arrayMove(items, oldIndex, newIndex)
-      })
+  // 刪除主分類
+  handleDelete = async (id: string) => {
+    const category = this.items.find((item) => item.id === id)
+    if (!category) {
+      this.callbacks.onError?.('找不到該分類，無法刪除')
+      return
     }
+
+    if (this.callbacks.onBeforeDelete) {
+      const confirmed = await this.callbacks.onBeforeDelete(id, category.name)
+      if (!confirmed) return
+    }
+
+    await this.callbacks.onDelete(id)
+  }
+
+  // 拖拽結束：無排序 API，僅更新本地顯示順序（非持久化）。
+  handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (active.id === over?.id) return
+
+    const oldIndex = this.items.findIndex((item) => item.id === active.id)
+    const newIndex = this.items.findIndex((item) => item.id === over?.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    this.callbacks.onReorder(arrayMove(this.items, oldIndex, newIndex))
   }
 }

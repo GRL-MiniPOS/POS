@@ -78,7 +78,7 @@ export function InventoryTableContent({
             price={product.price}
             totalStock={product.totalStock}
             onCheck={(checked) => onSelectRow(product.id, checked)}
-            onEdit={() => onEdit(product.id)}
+            onEdit={onEdit ? () => onEdit(product.id) : undefined}
             onDelete={() => onDelete(product.id)}
           />
         ))}

@@ -5,12 +5,11 @@ import {
   InventoryPagination,
   InventoryTableContent,
   GenericConfirmDialog,
-  EditProductDialog,
 } from '@/app/components/molecules'
 import { useInventoryList } from '@/app/hooks'
 
 export default function InventoryList() {
-  const { tableData, pagination, filters, dialogs, actions } =
+  const { tableData, pagination, filters, dialogs, actions, status } =
     useInventoryList()
 
   return (
@@ -23,26 +22,36 @@ export default function InventoryList() {
         onFiltersChange={filters.onChange}
       />
       <div className="overflow-x-auto pb-4 border border-border rounded-lg">
-        <InventoryTableContent
-          products={tableData.currentItems}
-          selectedRows={tableData.selectedRows}
-          selectAll={tableData.selectAllState}
-          onSelectRow={actions.onSelectRow}
-          onSelectAll={actions.onSelectAll}
-          onBulkDelete={actions.onBulkDelete}
-          onEdit={actions.onEdit}
-          onDelete={actions.onDelete}
-        />
-        <InventoryPagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          rowsPerPage={pagination.rowsPerPage}
-          totalItems={tableData.products.length}
-          startIndex={pagination.startIndex}
-          endIndex={pagination.endIndex}
-          onPageChange={pagination.onPageChange}
-          onRowsPerPageChange={pagination.onRowsPerPageChange}
-        />
+        {status.isError ? (
+          <p className="p-6 text-sm text-destructive">
+            商品載入失敗，請稍後再試
+          </p>
+        ) : status.isLoading ? (
+          <p className="p-6 text-sm text-muted-foreground">載入商品中...</p>
+        ) : (
+          <>
+            <InventoryTableContent
+              products={tableData.currentItems}
+              selectedRows={tableData.selectedRows}
+              selectAll={tableData.selectAllState}
+              onSelectRow={actions.onSelectRow}
+              onSelectAll={actions.onSelectAll}
+              onBulkDelete={actions.onBulkDelete}
+              onEdit={actions.onEdit}
+              onDelete={actions.onDelete}
+            />
+            <InventoryPagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              rowsPerPage={pagination.rowsPerPage}
+              totalItems={pagination.totalItems}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+              onPageChange={pagination.onPageChange}
+              onRowsPerPageChange={pagination.onRowsPerPageChange}
+            />
+          </>
+        )}
       </div>
       <GenericConfirmDialog
         open={dialogs.delete.state.open}
@@ -59,14 +68,6 @@ export default function InventoryList() {
         variant="destructive"
         buttonText={{ confirm: '刪除', cancel: '取消' }}
       />
-      {dialogs.edit.state.product && (
-        <EditProductDialog
-          open={dialogs.edit.state.open}
-          onOpenChange={dialogs.edit.onOpenChange}
-          product={dialogs.edit.state.product}
-          onSave={dialogs.edit.onSave}
-        />
-      )}
     </div>
   )
 }

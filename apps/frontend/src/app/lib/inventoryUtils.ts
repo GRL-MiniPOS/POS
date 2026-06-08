@@ -1,30 +1,30 @@
-import {
-  IProduct,
-  IInventoryItem,
-  calculateTotalStock,
-} from '@/app/types/inventoryList'
+import type { IProduct } from '@/app/types/inventoryList'
+import type { IProductSpec } from '@/app/types/addProduct'
+import type { Product } from '@/app/lib/schemas/products.schema'
 
 /**
- * 將 IInventoryItem 轉換為 IProduct 格式
- * - 保留 specifications 結構化數據用於 Popover 顯示
- * - 保留 specification 字符串用於搜索和篩選
- * - 計算 totalStock 用於數量顯示和判斷
+ * 將 API 的 Product 轉換為列表顯示用的 IProduct
+ * - 庫存直接用後端回的 stock（不再靠規格數量加總）
+ * - 有變體商品把 variants 展開成規格列；無變體商品規格為空
  */
-export const convertToProduct = (item: IInventoryItem): IProduct => {
-  // 計算總庫存（各規格數量加總）
-  const totalStock = calculateTotalStock(item)
-  // 提取規格名稱用於顯示和搜索
-  const specNames = item.specifications.map((spec) => spec.name).join(', ')
+export const productToInventoryRow = (product: Product): IProduct => {
+  const specifications: IProductSpec[] = product.has_variants
+    ? product.variants.map((variant) => ({
+        id: variant.id,
+        name: Object.values(variant.option_values).join(' / '),
+        quantity: variant.quantity,
+      }))
+    : []
 
   return {
-    id: item.id,
-    name: item.name,
-    category: item.category,
-    specification: specNames,
-    specifications: item.specifications, // 保留結構化數據用於 Popover
-    price: `NT$ ${item.price.toLocaleString()}`,
-    inventory: totalStock === 0 ? '缺貨' : `${totalStock} 件`,
-    totalStock, // 總庫存數量
-    image: item.image,
+    id: product.id,
+    name: product.name,
+    category: product.category?.name ?? '未分類',
+    specification: specifications.map((spec) => spec.name).join(', '),
+    specifications,
+    price: `NT$ ${product.price.toLocaleString()}`,
+    inventory: product.stock === 0 ? '缺貨' : `${product.stock} 件`,
+    totalStock: product.stock,
+    image: product.image,
   }
 }

@@ -1,16 +1,17 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  useInventorySearch,
-  useInventoryPagination,
-  useInventorySelection,
-  useInventoryFilter,
-} from '@/app/hooks'
-import { IInventoryItem, IFilterState } from '@/app/types/inventoryList'
-import { mockProducts as mockInventoryItems } from '@/app/product/inventory-list/mock/data'
-import { convertToProduct } from '@/app/lib/inventoryUtils'
-import { useInventoryDelete } from './useInventoryDelete'
-import { useInventoryEdit } from './useInventoryEdit'
+import { toast } from 'sonner'
+import { useInventorySelection } from './useInventorySelection'
+import { useProductsQuery } from '@/app/hooks/queries/useProductsQuery'
+import { useDeleteProductMutation } from '@/app/hooks/queries/useDeleteProductMutation'
+import { useBatchDeleteProductsMutation } from '@/app/hooks/queries/useBatchDeleteProductsMutation'
+import { productToInventoryRow } from '@/app/lib/inventoryUtils'
+import { getApiErrorMessage } from '@/app/lib/api/getApiErrorMessage'
+import type {
+  IDeleteDialogState,
+  IFilterState,
+} from '@/app/types/inventoryList'
+import type { Filters } from '@/app/lib/schemas/products.schema'
 
 const initialFilterState: IFilterState = {
   categories: [],
@@ -18,105 +19,151 @@ const initialFilterState: IFilterState = {
   priceMin: null,
   priceMax: null,
   stockStatus: 'all',
-  dateFrom: null,
-  dateTo: null,
+  saleStatus: 'all',
 }
 
 export function useInventoryList() {
   const router = useRouter()
+
+  // server-side 查詢條件（UI state）
   const [searchQuery, setSearchQuery] = useState('')
-  const [filters, setFilters] = useState<IFilterState>(initialFilterState)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [filterState, setFilterState] =
+    useState<IFilterState>(initialFilterState)
 
-  // 保存原始的 IInventoryItem 資料（用於編輯）
-  const [inventoryItems, setInventoryItems] =
-    useState<IInventoryItem[]>(mockInventoryItems)
-
-  // 資料處理流程：filter → convert → search → paginate → select
-  const filteredByCondition = useInventoryFilter(inventoryItems, filters)
-
-  const allProducts = useMemo(
-    () => filteredByCondition.map(convertToProduct),
-    [filteredByCondition]
+  const productFilters: Filters = useMemo(
+    () => ({
+      page,
+      limit,
+      search: searchQuery.trim() || undefined,
+      categories: filterState.categories.length
+        ? filterState.categories
+        : undefined,
+      options: filterState.specifications.length
+        ? filterState.specifications
+        : undefined,
+      priceMin: filterState.priceMin ?? undefined,
+      priceMax: filterState.priceMax ?? undefined,
+      stockStatus: filterState.stockStatus,
+      saleStatus: filterState.saleStatus,
+    }),
+    [page, limit, searchQuery, filterState]
   )
 
-  const filteredProducts = useInventorySearch(allProducts, searchQuery)
-  const pagination = useInventoryPagination(filteredProducts, 5)
-  const selection = useInventorySelection(
-    pagination.currentItems,
-    filteredProducts,
-    searchQuery
+  const query = useProductsQuery(productFilters)
+
+  const rows = useMemo(
+    () => (query.data?.data ?? []).map(productToInventoryRow),
+    [query.data]
   )
 
-  const { setCurrentPage } = pagination
+  const apiPagination = query.data?.pagination
+  const currentPage = apiPagination?.current_page ?? page
+  const totalPages = apiPagination?.total_pages ?? 0
+  const totalItems = apiPagination?.total_items ?? 0
+  const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * limit
+  const endIndex = startIndex + rows.length
 
-  // 副作用：搜尋改變時重置分頁
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery, setCurrentPage])
+  // current-page 選取（跨頁不保留）
+  const selection = useInventorySelection(rows, rows, searchQuery)
 
-  // Sub-hooks for Delete and Edit logic
-  const {
-    deleteDialog,
-    handleDelete,
-    handleBulkDelete,
-    handleConfirmDelete,
-    handleCloseDeleteDialog,
-  } = useInventoryDelete({
-    setInventoryItems,
-    selection,
+  const deleteProduct = useDeleteProductMutation()
+  const batchDeleteProducts = useBatchDeleteProductsMutation()
+  const [deleteDialog, setDeleteDialog] = useState<IDeleteDialogState>({
+    open: false,
+    type: null,
   })
 
-  const { editDialog, setEditDialog, handleEdit, handleSaveEdit } =
-    useInventoryEdit({
-      inventoryItems,
-      setInventoryItems,
-    })
+  const closeDeleteDialog = () => setDeleteDialog({ open: false, type: null })
 
-  // Handlers
-  const handleAddProduct = () => router.push('/product/add-product')
-  const handleSearch = (query: string) => setSearchQuery(query)
+  const handleDelete = (id: string) =>
+    setDeleteDialog({ open: true, type: 'single', productId: id })
+
+  const handleBulkDelete = () => {
+    if (selection.selectedRows.size === 0) {
+      toast.error('請先選擇要刪除的商品')
+      return
+    }
+    setDeleteDialog({
+      open: true,
+      type: 'bulk',
+      selectedCount: selection.selectedRows.size,
+    })
+  }
+
+  const handleConfirmDelete = async () => {
+    try {
+      if (deleteDialog.type === 'single' && deleteDialog.productId) {
+        await deleteProduct.mutateAsync(deleteDialog.productId)
+        toast.success('已成功刪除商品')
+      } else if (deleteDialog.type === 'bulk') {
+        const ids = Array.from(selection.selectedRows)
+        await batchDeleteProducts.mutateAsync(ids)
+        selection.clearSelection()
+        toast.success(`已成功刪除 ${ids.length} 個商品`)
+      }
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    } finally {
+      closeDeleteDialog()
+    }
+  }
+
+  const handleSearch = (nextQuery: string) => {
+    setSearchQuery(nextQuery)
+    setPage(1)
+  }
+
+  const handleFiltersChange = (nextFilters: IFilterState) => {
+    setFilterState(nextFilters)
+    setPage(1)
+  }
+
+  const handleRowsPerPageChange = (nextLimit: number) => {
+    setLimit(nextLimit)
+    setPage(1)
+  }
 
   return {
     tableData: {
-      products: filteredProducts,
-      currentItems: pagination.currentItems,
+      currentItems: rows,
       selectedRows: selection.selectedRows,
       selectAllState: selection.selectAllCheckboxState,
     },
     pagination: {
-      currentPage: pagination.currentPage,
-      totalPages: pagination.totalPages,
-      rowsPerPage: pagination.rowsPerPage,
-      startIndex: pagination.startIndex,
-      endIndex: pagination.endIndex,
-      onPageChange: pagination.setCurrentPage,
-      onRowsPerPageChange: pagination.setRowsPerPage,
+      currentPage,
+      totalPages,
+      rowsPerPage: limit,
+      totalItems,
+      startIndex,
+      endIndex,
+      onPageChange: setPage,
+      onRowsPerPageChange: handleRowsPerPageChange,
     },
     filters: {
-      state: filters,
-      onChange: setFilters,
+      state: filterState,
+      onChange: handleFiltersChange,
     },
     dialogs: {
       delete: {
         state: deleteDialog,
-        onOpenChange: (open: boolean) => !open && handleCloseDeleteDialog(),
+        onOpenChange: (open: boolean) => !open && closeDeleteDialog(),
         onConfirm: handleConfirmDelete,
-      },
-      edit: {
-        state: editDialog,
-        onOpenChange: (open: boolean) =>
-          setEditDialog((prev) => ({ ...prev, open })),
-        onSave: handleSaveEdit,
       },
     },
     actions: {
       onSearch: handleSearch,
-      onAddProduct: handleAddProduct,
-      onEdit: handleEdit,
+      onAddProduct: () => router.push('/product/add-product'),
+      onEdit: (id: string) => router.push(`/product/edit-product/${id}`),
       onDelete: handleDelete,
       onBulkDelete: handleBulkDelete,
       onSelectRow: selection.handleSelectRow,
       onSelectAll: selection.handlePageSelectAll,
+    },
+    status: {
+      isLoading: query.isPending,
+      isError: query.isError,
     },
   }
 }

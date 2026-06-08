@@ -9,8 +9,8 @@
 | 前端框架 | Next.js 15 App Router / React 19 |
 | 語言 | TypeScript |
 | UI | Radix/shadcn-style atoms、Tailwind CSS、`lucide-react` |
-| 資料邊界 | 目前沒有集中 API client；資料轉換放在 `lib/`、`hooks/` 或路由邊界 |
-| 狀態 | React local state 與 custom hooks；未導入全域 store 或 TanStack Query |
+| 資料邊界 | `lib/api/` 集中 API client（`apiRequest` wrapper + Zod 驗證）；資料轉換放在 `lib/`、`hooks/` 或路由邊界 |
+| 狀態 | React local state + custom hooks；TanStack Query 管 server state；Zustand 管 client-only UI state |
 | 路由 | Next.js App Router |
 | Locales | 目前未導入 i18n |
 
@@ -31,13 +31,18 @@
 apps/frontend/
 ├── src/app/
 │   ├── components/        # atoms, molecules, organisms, templates, pages
-│   ├── hooks/             # reusable React hooks
-│   ├── lib/               # utils, strategies, data transforms
+│   ├── hooks/             # reusable React hooks（UI hooks 平鋪；queries/ 子目錄放跨路由 React Query hooks）
+│   ├── lib/
+│   │   ├── api/           # apiRequest wrapper、Zod schema、API functions、query keys（按資源分子目錄）
+│   │   ├── strategies/    # domain strategies
+│   │   └── utils.ts
+│   ├── stores/            # Zustand stores（client-only UI state，跨元件共用時才建立）
 │   ├── types/             # shared TypeScript types
 │   ├── product/           # product routes
 │   ├── order/             # order routes
 │   ├── customer/          # customer routes
 │   ├── report/            # report routes
+│   ├── providers.tsx      # client-only providers（QueryClient 等）
 │   ├── layout.tsx
 │   ├── page.tsx
 │   └── globals.css

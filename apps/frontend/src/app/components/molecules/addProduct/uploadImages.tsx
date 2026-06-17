@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 import { Upload } from '@/app/components/atoms'
 import { useRef } from 'react'

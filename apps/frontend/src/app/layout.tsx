@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import { Providers } from '@/app/providers'
 import { SidebarProvider, SidebarTrigger } from '@/app/components/atoms/sidebar'
 import { AppSidebar } from '@/app/components/organisms/sidebar/app-sidebar'
 import { Toaster } from '@/app/components/atoms'
@@ -31,14 +32,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SidebarProvider>
-          <AppSidebar />
-          <main className="px-2 flex-1">
-            <SidebarTrigger />
-            {children}
-          </main>
-        </SidebarProvider>
-        <Toaster position="top-center" />
+        <Providers>
+          <SidebarProvider>
+            <AppSidebar />
+            <main className="px-2 flex-1">
+              <SidebarTrigger />
+              {children}
+            </main>
+          </SidebarProvider>
+          <Toaster position="top-center" />
+        </Providers>
       </body>
     </html>
   )

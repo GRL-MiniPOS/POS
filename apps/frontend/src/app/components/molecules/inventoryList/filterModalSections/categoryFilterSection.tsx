@@ -1,33 +1,40 @@
 'use client'
 
 import type { CategoryFilterSectionProps } from '@/app/types/inventoryList'
-import { Label, Checkbox } from '@/app/components/atoms'
-import { categories } from '@/app/product/inventory-list/mock/data'
+import { Checkbox, Label } from '@/app/components/atoms'
+import { useProductCategoriesQuery } from '@/app/hooks/queries/useProductCategoriesQuery'
 
 export function CategoryFilterSection({
   selected,
   onToggle,
 }: CategoryFilterSectionProps) {
+  const { data: categories, isPending, isError } = useProductCategoriesQuery()
+
   return (
     <div className="space-y-3">
       <Label>分類</Label>
-      <div className="grid grid-cols-2 gap-3">
-        {categories.map((category) => (
-          <div
-            key={category}
-            className="flex items-center space-x-2 rounded-md border border-border p-3 hover:bg-accent/50 transition-colors cursor-pointer"
-            onClick={() => onToggle(category)}
-          >
-            <Checkbox
-              checked={selected.includes(category)}
-              onCheckedChange={() => onToggle(category)}
-            />
-            <label className="text-sm font-medium cursor-pointer flex-1">
-              {category}
+      {isPending ? (
+        <p className="text-sm text-muted-foreground">載入分類中...</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">分類載入失敗</p>
+      ) : categories.length === 0 ? (
+        <p className="text-sm text-muted-foreground">尚無分類</p>
+      ) : (
+        <div className="flex flex-wrap gap-3">
+          {categories.map((category) => (
+            <label
+              key={category.id}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Checkbox
+                checked={selected.includes(category.id)}
+                onCheckedChange={() => onToggle(category.id)}
+              />
+              <span className="text-sm">{category.name}</span>
             </label>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

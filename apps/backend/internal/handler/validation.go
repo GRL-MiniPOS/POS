@@ -114,6 +114,7 @@ func toJSONFieldName(field string) string {
 		"ImageIDs":     "image_ids",
 		"ID":           "id",
 		"IDs":          "ids",
+		"OrderedIDs":   "ordered_ids",
 		"Quantity":     "quantity",
 	}
 	if jsonName, ok := fieldMap[field]; ok {

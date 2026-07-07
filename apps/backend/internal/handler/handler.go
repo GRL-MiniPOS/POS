@@ -57,6 +57,8 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 		// Product categories
 		v1.GET("/product-categories", h.GetCategories)
 		v1.POST("/product-categories", h.CreateCategory)
+		v1.PATCH("/product-categories/reorder", h.ReorderCategories)
+		v1.PATCH("/product-categories/:id", h.UpdateCategory)
 		v1.DELETE("/product-categories/:id", h.DeleteCategory)
 
 		// Products

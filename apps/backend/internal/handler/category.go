@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
 	"github/pos/internal/dto"
 	"github/pos/internal/model"
+	"github/pos/internal/repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -187,6 +189,147 @@ func (h *Handler) CreateCategory(c *gin.Context) {
 			ID:      category.ID,
 			Message: "分類新增成功",
 		},
+	})
+}
+
+// UpdateCategory godoc
+// @Summary      更新商品分類
+// @Description  部分更新分類欄位，只更新有提供的欄位（name、order、active）。不支援變更 parent_id（改父層）。
+// @Tags         Categories
+// @Accept       json
+// @Produce      json
+// @Param        id       path      string                     true  "分類 ID (UUID)"
+// @Param        request  body      dto.UpdateCategoryRequest  true  "要更新的分類欄位"
+// @Success      200      {object}  dto.UpdateCategorySuccessResponse  "成功"
+// @Failure      400      {object}  dto.ErrorResponse  "參數錯誤或分類名稱已存在"
+// @Failure      404      {object}  dto.ErrorResponse  "分類不存在"
+// @Failure      500      {object}  dto.ErrorResponse  "伺服器錯誤"
+// @Router       /product-categories/{id} [patch]
+func (h *Handler) UpdateCategory(c *gin.Context) {
+	id := c.Param("id")
+	if !validateUUIDField(c, "id", id) {
+		return
+	}
+
+	var req dto.UpdateCategoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondBindError(c, err)
+		return
+	}
+
+	if req.Name == nil && req.Order == nil && req.Active == nil {
+		respondValidationFields(c, "請求參數驗證失敗", dto.ValidationFieldError{
+			Field:   "body",
+			Message: "至少需要提供一個要更新的欄位",
+		})
+		return
+	}
+
+	existing, err := h.categoryRepo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Success: false,
+			Error:   dto.ErrorDetail{Code: dto.ErrCodeInternalServerError, Message: "無法檢查分類"},
+		})
+		return
+	}
+	if existing == nil {
+		c.JSON(http.StatusNotFound, dto.ErrorResponse{
+			Success: false,
+			Error:   dto.ErrorDetail{Code: dto.ErrCodeCategoryNotFound, Message: "分類不存在"},
+		})
+		return
+	}
+
+	// Reject a rename that collides with an existing category name.
+	if req.Name != nil && *req.Name != existing.Name {
+		duplicate, err := h.categoryRepo.GetByName(c.Request.Context(), *req.Name)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+				Success: false,
+				Error:   dto.ErrorDetail{Code: dto.ErrCodeInternalServerError, Message: "無法檢查分類名稱"},
+			})
+			return
+		}
+		if duplicate != nil {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+				Success: false,
+				Error:   dto.ErrorDetail{Code: dto.ErrCodeCategoryNameExists, Message: "分類名稱已存在"},
+			})
+			return
+		}
+	}
+
+	category := &model.ProductCategory{
+		ID:        existing.ID,
+		Name:      existing.Name,
+		ParentID:  existing.ParentID,
+		Order:     existing.Order,
+		Active:    existing.Active,
+		CreatedAt: existing.CreatedAt,
+		UpdatedAt: existing.UpdatedAt,
+	}
+	if req.Name != nil {
+		category.Name = *req.Name
+	}
+	if req.Order != nil {
+		category.Order = *req.Order
+	}
+	if req.Active != nil {
+		category.Active = *req.Active
+	}
+
+	if err := h.categoryRepo.Update(c.Request.Context(), category); err != nil {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Success: false,
+			Error:   dto.ErrorDetail{Code: dto.ErrCodeInternalServerError, Message: "無法更新分類"},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.SuccessResponse{
+		Success: true,
+		Data:    dto.ToCategoryResponse(category),
+	})
+}
+
+// ReorderCategories godoc
+// @Summary      調整商品分類排序
+// @Description  批次調整同一層分類的排序。ordered_ids 必須包含且僅包含該層現有的所有分類，依陣列順序寫回 order（1, 2, 3...）。parent_id 省略或傳 null 表示頂層。
+// @Tags         Categories
+// @Accept       json
+// @Produce      json
+// @Param        request  body      dto.ReorderCategoriesRequest  true  "同一層排好序的分類 ID 陣列"
+// @Success      200      {object}  dto.ReorderCategoriesSuccessResponse  "成功"
+// @Failure      400      {object}  dto.ErrorResponse  "參數錯誤，或 ordered_ids 與該層分類不一致"
+// @Failure      500      {object}  dto.ErrorResponse  "伺服器錯誤"
+// @Router       /product-categories/reorder [patch]
+func (h *Handler) ReorderCategories(c *gin.Context) {
+	var req dto.ReorderCategoriesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondBindError(c, err)
+		return
+	}
+
+	err := h.categoryRepo.Reorder(c.Request.Context(), req.ParentID, req.OrderedIDs)
+	if errors.Is(err, repository.ErrReorderMismatch) {
+		respondValidationFields(c, "請求參數驗證失敗", dto.ValidationFieldError{
+			Field:   "ordered_ids",
+			Message: "必須包含且僅包含該層所有分類，且不可重複",
+		})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Success: false,
+			Error:   dto.ErrorDetail{Code: dto.ErrCodeInternalServerError, Message: "無法更新分類排序"},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.SuccessResponse{
+		Success: true,
+		Data:    dto.ReorderCategoriesResponse{Message: "分類排序更新成功"},
 	})
 }
 

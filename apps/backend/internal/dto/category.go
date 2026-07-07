@@ -15,6 +15,21 @@ type CreateCategoryResponse struct {
 	Message string `json:"message" example:"分類新增成功"`
 }
 
+// UpdateCategoryRequest represents a partial update to a category.
+// All fields are optional; only provided fields are updated. parent_id (reparenting) is not supported.
+type UpdateCategoryRequest struct {
+	Name   *string `json:"name,omitempty" binding:"omitempty,min=1,max=100" example:"外套"`
+	Order  *int    `json:"order,omitempty" example:"2"`
+	Active *bool   `json:"active,omitempty" example:"true"`
+}
+
+// ReorderCategoriesRequest reorders every category within one level.
+// ordered_ids must contain exactly the current members of the level (no missing, extra, or duplicate ids).
+type ReorderCategoriesRequest struct {
+	ParentID   *string  `json:"parent_id,omitempty" binding:"omitempty,uuid4" extensions:"x-nullable" example:"2c619823-aa6b-4e7e-931f-c8358bb07861"`
+	OrderedIDs []string `json:"ordered_ids" binding:"required,min=1,dive,uuid4" example:"2c619823-aa6b-4e7e-931f-c8358bb07861"`
+}
+
 // CategoryResponse represents a category in the response
 type CategoryResponse struct {
 	ID        string  `json:"id" example:"2c619823-aa6b-4e7e-931f-c8358bb07861"`
@@ -37,6 +52,23 @@ type CategoryListResponse struct {
 type CreateCategorySuccessResponse struct {
 	Success bool                   `json:"success" example:"true"`
 	Data    CreateCategoryResponse `json:"data"`
+}
+
+// UpdateCategorySuccessResponse represents a successful category update response
+type UpdateCategorySuccessResponse struct {
+	Success bool             `json:"success" example:"true"`
+	Data    CategoryResponse `json:"data"`
+}
+
+// ReorderCategoriesResponse represents the response after reordering categories
+type ReorderCategoriesResponse struct {
+	Message string `json:"message" example:"分類排序更新成功"`
+}
+
+// ReorderCategoriesSuccessResponse represents a successful category reorder response
+type ReorderCategoriesSuccessResponse struct {
+	Success bool                      `json:"success" example:"true"`
+	Data    ReorderCategoriesResponse `json:"data"`
 }
 
 // DeleteCategoryResponse represents the response after deleting a category

@@ -32,6 +32,8 @@ http://localhost:8002/swagger/index.html
 ### Categories (分類管理)
 - `GET /api/product-categories` - 取得商品分類列表
 - `POST /api/product-categories` - 新增商品分類
+- `PATCH /api/product-categories/reorder` - 調整同一層分類排序
+- `PATCH /api/product-categories/{id}` - 更新商品分類（name / order / active）
 - `DELETE /api/product-categories/{id}` - 刪除商品分類
 
 ### Products (商品管理)

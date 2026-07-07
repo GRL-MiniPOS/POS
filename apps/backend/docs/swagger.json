@@ -177,6 +177,52 @@
                 }
             }
         },
+        "/product-categories/reorder": {
+            "patch": {
+                "description": "批次調整同一層分類的排序。ordered_ids 必須包含且僅包含該層現有的所有分類，依陣列順序寫回 order（1, 2, 3...）。parent_id 省略或傳 null 表示頂層。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "調整商品分類排序",
+                "parameters": [
+                    {
+                        "description": "同一層排好序的分類 ID 陣列",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReorderCategoriesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReorderCategoriesSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "參數錯誤，或 ordered_ids 與該層分類不一致",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "伺服器錯誤",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/product-categories/{id}": {
             "delete": {
                 "description": "刪除指定分類（會一併刪除子分類，商品轉為未分類）",
@@ -205,6 +251,63 @@
                     },
                     "400": {
                         "description": "分類仍有庫存商品",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "分類不存在",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "伺服器錯誤",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "部分更新分類欄位，只更新有提供的欄位（name、order、active）。不支援變更 parent_id（改父層）。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "更新商品分類",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "分類 ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "要更新的分類欄位",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCategoryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCategorySuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "參數錯誤或分類名稱已存在",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -1502,6 +1605,81 @@
                         "out-of-stock"
                     ],
                     "example": "out-of-stock"
+                }
+            }
+        },
+        "dto.ReorderCategoriesRequest": {
+            "type": "object",
+            "required": [
+                "ordered_ids"
+            ],
+            "properties": {
+                "ordered_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "2c619823-aa6b-4e7e-931f-c8358bb07861"
+                    ]
+                },
+                "parent_id": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "example": "2c619823-aa6b-4e7e-931f-c8358bb07861"
+                }
+            }
+        },
+        "dto.ReorderCategoriesResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "分類排序更新成功"
+                }
+            }
+        },
+        "dto.ReorderCategoriesSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.ReorderCategoriesResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.UpdateCategoryRequest": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "外套"
+                },
+                "order": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "dto.UpdateCategorySuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.CategoryResponse"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },

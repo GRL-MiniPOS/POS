@@ -282,6 +282,87 @@ func TestDeleteCategoryInvalidID(t *testing.T) {
 	}
 }
 
+func TestUpdateCategory(t *testing.T) {
+	server := newAPITestServer(t)
+	now := time.Now()
+	expectCategoryByID(server.mock, testCategoryID)
+	server.mock.ExpectQuery(`UPDATE product_categories\s+SET name = \$1, parent_id = \$2, "order" = \$3, active = \$4\s+WHERE id = \$5\s+RETURNING updated_at`).
+		WithArgs("上衣", nil, 3, true, testCategoryID).
+		WillReturnRows(sqlmock.NewRows([]string{"updated_at"}).AddRow(now))
+
+	rr := performJSONRequest(server.router, http.MethodPatch, "/api/product-categories/"+testCategoryID, `{"order":3}`)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestUpdateCategoryRejectsEmptyBody(t *testing.T) {
+	server := newAPITestServer(t)
+
+	rr := performJSONRequest(server.router, http.MethodPatch, "/api/product-categories/"+testCategoryID, `{}`)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestUpdateCategoryNotFound(t *testing.T) {
+	server := newAPITestServer(t)
+	server.mock.ExpectQuery(`SELECT id, name, parent_id, "order", active, created_at, updated_at\s+FROM product_categories WHERE id = \$1`).
+		WithArgs(testCategoryID).
+		WillReturnError(sql.ErrNoRows)
+
+	rr := performJSONRequest(server.router, http.MethodPatch, "/api/product-categories/"+testCategoryID, `{"order":3}`)
+
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestReorderCategories(t *testing.T) {
+	server := newAPITestServer(t)
+	idA := "8594e2e0-4b1e-4224-8f1e-2310419cf661"
+	idB := "b1d2c3e4-5f60-4718-8293-a0b1c2d3e4f5"
+	server.mock.ExpectBegin()
+	server.mock.ExpectQuery(`SELECT id FROM product_categories WHERE parent_id IS NULL`).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(idA).AddRow(idB))
+	server.mock.ExpectExec(`UPDATE product_categories SET "order" = \$1 WHERE id = \$2`).
+		WithArgs(1, idB).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	server.mock.ExpectExec(`UPDATE product_categories SET "order" = \$1 WHERE id = \$2`).
+		WithArgs(2, idA).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	server.mock.ExpectCommit()
+
+	rr := performJSONRequest(server.router, http.MethodPatch, "/api/product-categories/reorder",
+		`{"parent_id":null,"ordered_ids":["`+idB+`","`+idA+`"]}`)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+}
+
+func TestReorderCategoriesRejectsMemberMismatch(t *testing.T) {
+	server := newAPITestServer(t)
+	idA := "8594e2e0-4b1e-4224-8f1e-2310419cf661"
+	idB := "b1d2c3e4-5f60-4718-8293-a0b1c2d3e4f5"
+	server.mock.ExpectBegin()
+	server.mock.ExpectQuery(`SELECT id FROM product_categories WHERE parent_id IS NULL`).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(idA))
+	server.mock.ExpectRollback()
+
+	rr := performJSONRequest(server.router, http.MethodPatch, "/api/product-categories/reorder",
+		`{"parent_id":null,"ordered_ids":["`+idA+`","`+idB+`"]}`)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d: %s", rr.Code, rr.Body.String())
+	}
+	if !strings.Contains(rr.Body.String(), "ordered_ids") {
+		t.Fatalf("expected field error for ordered_ids, got %s", rr.Body.String())
+	}
+}
+
 func TestUpload(t *testing.T) {
 	server := newAPITestServer(t)
 	now := time.Now()

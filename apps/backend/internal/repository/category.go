@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github/pos/internal/model"
 	possql "github/pos/internal/storage/sql"
@@ -11,6 +12,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
+
+// ErrReorderMismatch is returned when ordered ids do not match the current members of a category level.
+var ErrReorderMismatch = errors.New("ordered ids do not match category level members")
 
 type CategoryRepository struct {
 	db *sqlx.DB
@@ -133,6 +137,61 @@ func (r *CategoryRepository) Update(ctx context.Context, category *model.Product
 	}
 
 	return nil
+}
+
+// Reorder rewrites the display order of every category within one level.
+// orderedIDs must contain exactly the current members of the level, otherwise ErrReorderMismatch is returned.
+func (r *CategoryRepository) Reorder(ctx context.Context, parentID *string, orderedIDs []string) error {
+	return possql.RunInTx(ctx, r.db, func(tx *sqlx.Tx) error {
+		var memberIDs []string
+		var err error
+		if parentID == nil {
+			err = tx.SelectContext(ctx, &memberIDs, `SELECT id FROM product_categories WHERE parent_id IS NULL`)
+		} else {
+			err = tx.SelectContext(ctx, &memberIDs, `SELECT id FROM product_categories WHERE parent_id = $1`, *parentID)
+		}
+		if err != nil {
+			return fmt.Errorf("failed to load category level members: %w", err)
+		}
+
+		if !sameIDSet(memberIDs, orderedIDs) {
+			return ErrReorderMismatch
+		}
+
+		for index, id := range orderedIDs {
+			_, err := tx.ExecContext(ctx, `UPDATE product_categories SET "order" = $1 WHERE id = $2`, index+1, id)
+			if err != nil {
+				return fmt.Errorf("failed to update category order: %w", err)
+			}
+		}
+
+		return nil
+	})
+}
+
+// sameIDSet reports whether ordered contains exactly the members with no missing, extra, or duplicate ids.
+func sameIDSet(members, ordered []string) bool {
+	if len(members) != len(ordered) {
+		return false
+	}
+
+	memberSet := make(map[string]struct{}, len(members))
+	for _, id := range members {
+		memberSet[id] = struct{}{}
+	}
+
+	seen := make(map[string]struct{}, len(ordered))
+	for _, id := range ordered {
+		if _, ok := memberSet[id]; !ok {
+			return false
+		}
+		if _, dup := seen[id]; dup {
+			return false
+		}
+		seen[id] = struct{}{}
+	}
+
+	return true
 }
 
 // Delete deletes a category and its subcategories, sets products to NULL

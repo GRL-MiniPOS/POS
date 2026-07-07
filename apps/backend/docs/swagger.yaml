@@ -615,6 +615,58 @@ definitions:
         example: out-of-stock
         type: string
     type: object
+  dto.ReorderCategoriesRequest:
+    properties:
+      ordered_ids:
+        example:
+        - 2c619823-aa6b-4e7e-931f-c8358bb07861
+        items:
+          type: string
+        minItems: 1
+        type: array
+      parent_id:
+        example: 2c619823-aa6b-4e7e-931f-c8358bb07861
+        type: string
+        x-nullable: true
+    required:
+    - ordered_ids
+    type: object
+  dto.ReorderCategoriesResponse:
+    properties:
+      message:
+        example: 分類排序更新成功
+        type: string
+    type: object
+  dto.ReorderCategoriesSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.ReorderCategoriesResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
+  dto.UpdateCategoryRequest:
+    properties:
+      active:
+        example: true
+        type: boolean
+      name:
+        example: 外套
+        maxLength: 100
+        minLength: 1
+        type: string
+      order:
+        example: 2
+        type: integer
+    type: object
+  dto.UpdateCategorySuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.CategoryResponse'
+      success:
+        example: true
+        type: boolean
+    type: object
   dto.UpdateProductRequest:
     properties:
       category_id:
@@ -859,6 +911,75 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: 刪除商品分類
+      tags:
+      - Categories
+    patch:
+      consumes:
+      - application/json
+      description: 部分更新分類欄位，只更新有提供的欄位（name、order、active）。不支援變更 parent_id（改父層）。
+      parameters:
+      - description: 分類 ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 要更新的分類欄位
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.UpdateCategorySuccessResponse'
+        "400":
+          description: 參數錯誤或分類名稱已存在
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: 分類不存在
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 伺服器錯誤
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 更新商品分類
+      tags:
+      - Categories
+  /product-categories/reorder:
+    patch:
+      consumes:
+      - application/json
+      description: 批次調整同一層分類的排序。ordered_ids 必須包含且僅包含該層現有的所有分類，依陣列順序寫回 order（1, 2,
+        3...）。parent_id 省略或傳 null 表示頂層。
+      parameters:
+      - description: 同一層排好序的分類 ID 陣列
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReorderCategoriesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/dto.ReorderCategoriesSuccessResponse'
+        "400":
+          description: 參數錯誤，或 ordered_ids 與該層分類不一致
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 伺服器錯誤
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 調整商品分類排序
       tags:
       - Categories
   /product-options:

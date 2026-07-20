@@ -4,6 +4,8 @@ import type {
   CreateBody,
   Filters,
   NormalizedFilters,
+  ReorderBody,
+  UpdateBody,
 } from '@/app/lib/schemas/productCategories.schema'
 import {
   CreateBodySchema,
@@ -11,6 +13,10 @@ import {
   DeleteResponseSchema,
   IdSchema,
   ListResponseSchema,
+  ReorderBodySchema,
+  ReorderResponseSchema,
+  UpdateBodySchema,
+  UpdateResponseSchema,
 } from '@/app/lib/schemas/productCategories.schema'
 
 function buildListPath(filters: NormalizedFilters) {
@@ -50,5 +56,24 @@ export function deleteProductCategory(id: string) {
 
   return apiRequest(`/product-categories/${parsedId}`, DeleteResponseSchema, {
     method: 'DELETE',
+  })
+}
+
+export function updateProductCategory(id: string, body: UpdateBody) {
+  const parsedId = IdSchema.parse(id)
+  const parsedBody = UpdateBodySchema.parse(body)
+
+  return apiRequest(`/product-categories/${parsedId}`, UpdateResponseSchema, {
+    method: 'PATCH',
+    body: JSON.stringify(parsedBody),
+  })
+}
+
+export function reorderProductCategories(body: ReorderBody) {
+  const parsedBody = ReorderBodySchema.parse(body)
+
+  return apiRequest('/product-categories/reorder', ReorderResponseSchema, {
+    method: 'PATCH',
+    body: JSON.stringify(parsedBody),
   })
 }

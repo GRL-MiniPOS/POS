@@ -3,6 +3,7 @@ import type { MouseEvent } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/app/components/atoms'
+import { cn } from '@/app/lib/utils'
 import { Trash2, ChevronRight, GripVertical } from 'lucide-react'
 
 export function SortableItem({
@@ -34,9 +35,11 @@ export function SortableItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-x-3 p-4 border-b border-gray-100 last:border-b-0 bg-white hover:bg-gray-50 group ${
-        isActive ? 'bg-blue-50 border-blue-200' : ''
-      }`}
+      className={cn(
+        // 保留固定寬度的左側標註條（預設透明），active 時才顯示 brand accent，避免出現/消失造成位移。
+        'flex items-center gap-x-3 border-b border-l-4 border-l-transparent border-gray-100 p-4 last:border-b-0 bg-white hover:bg-gray-50 group',
+        isActive && 'border-l-brand bg-brand-50 hover:bg-brand-50'
+      )}
       onClick={fnHandleClick}
     >
       <div

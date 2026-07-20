@@ -54,7 +54,7 @@ export class MainCategoryStrategy implements ICategoryStrategy {
     await this.callbacks.onDelete(id)
   }
 
-  // 拖拽結束：無排序 API，僅更新本地顯示順序（非持久化）。
+  // 拖拽結束：產生重排後的完整清單交給 onReorder，由呼叫端負責持久化。
   handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (active.id === over?.id) return

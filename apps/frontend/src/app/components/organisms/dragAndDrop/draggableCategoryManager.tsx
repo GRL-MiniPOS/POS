@@ -21,11 +21,14 @@ import { cn } from '@/app/lib/utils'
 interface DraggableCategoryManagerProps {
   strategy: ICategoryStrategy
   className?: string
+  // 目前選中的項目 id；相符的項目會以 active 樣式標註。主分類用來標示當前展開子分類的那筆。
+  activeId?: string | null
 }
 
 export function DraggableCategoryManager({
   strategy,
   className,
+  activeId,
 }: DraggableCategoryManagerProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -64,6 +67,7 @@ export function DraggableCategoryManager({
                 key={item.id}
                 id={item.id}
                 name={item.name}
+                isActive={activeId != null && item.id === activeId}
                 showArrow={strategy.type === 'main'}
                 handleDelete={strategy.handleDelete}
                 handleClick={strategy.handleClick}
